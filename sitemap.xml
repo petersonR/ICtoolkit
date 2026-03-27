@@ -1,0 +1,20 @@
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/articles/ICtoolkit.html</loc></url>
+<url><loc>/articles/index.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/news/index.html</loc></url>
+<url><loc>/reference/ICtoolkit-package.html</loc></url>
+<url><loc>/reference/compute_aic.html</loc></url>
+<url><loc>/reference/compute_aicc.html</loc></url>
+<url><loc>/reference/compute_bic.html</loc></url>
+<url><loc>/reference/compute_ebic.html</loc></url>
+<url><loc>/reference/compute_rbic.html</loc></url>
+<url><loc>/reference/covid_eol.html</loc></url>
+<url><loc>/reference/expand_scope.html</loc></url>
+<url><loc>/reference/ic_step.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/plot_ic_path.html</loc></url>
+</urlset>
+
