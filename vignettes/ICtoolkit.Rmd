@@ -1,6 +1,8 @@
 ---
 title: "Getting started with ICtoolkit"
-output: rmarkdown::html_vignette
+output: 
+  rmarkdown::html_vignette:
+    toc: yes
 vignette: >
   %\VignetteIndexEntry{Getting started with ICtoolkit}
   %\VignetteEngine{knitr::rmarkdown}
@@ -18,6 +20,7 @@ knitr::opts_chunk$set(
 
 ```{r load}
 library(ICtoolkit)
+data(covid_eol)
 ```
 
 ## Overview
@@ -38,12 +41,16 @@ For `glmnet` and `ncvreg`, the criterion is evaluated at every point on the
 regularization path (one value per `lambda`), which can itself be used as a
 selection algorithm without any stepwise fitting.
 
+Throughout this vignette we use the `covid_eol` dataset bundled with the
+package — a synthetic dataset modeled after a study of family members of
+ICU patients surveyed for PTSD during the COVID-19 pandemic (n = 279).
+
 ---
 
 ## 1. Standard criteria for `lm` and `glm`
 
 ```{r lm-example}
-fit <- lm(mpg ~ wt + hp + cyl, data = mtcars)
+fit <- lm(ies_total ~ age + race + hispanic + female, data = covid_eol)
 
 compute_aic(fit)
 compute_aicc(fit)
@@ -57,6 +64,15 @@ result <- compute_bic(fit)
 attr(result, "fit_class")   # model class
 attr(result, "k")           # number of estimated parameters
 attr(result, "criterion")   # which IC
+```
+
+The same functions work for `glm` objects:
+
+```{r glm-example}
+fit_glm <- glm(ptsd ~ age + race + hispanic + female,
+               data = covid_eol, family = binomial)
+compute_aic(fit_glm)
+compute_bic(fit_glm)
 ```
 
 ---
@@ -81,18 +97,18 @@ attr(result_ebic, "gamma")   # the computed gamma
 attr(result_ebic, "P")
 ```
 
-You can supply your own `gammafn`:
+You can supply your own `gamma`:
 
 ```{r ebic-custom-gamma}
 # Fixed gamma = 0.5
-compute_ebic(fit, P = 10, gammafn = function(P, k, n) 0.5)
+compute_ebic(fit, P = 10, gamma = 0.5)
 ```
 
-Setting `gammafn = function(P, k, n) 0` recovers standard BIC:
+Setting `gamma = 0` recovers standard BIC:
 
 ```{r ebic-zero-gamma}
 all.equal(
-  as.numeric(compute_ebic(fit, P = 10, gammafn = function(P, k, n) 0)),
+  as.numeric(compute_ebic(fit, P = 10, gamma = 0)),
   as.numeric(compute_bic(fit))
 )
 ```
@@ -111,24 +127,16 @@ element should be a character vector of **term labels** exactly as returned
 by `attr(terms(fit), "term.labels")`.
 
 ```{r rbic-setup}
-set.seed(1)
-n  <- 100
-df <- data.frame(
-  y    = rnorm(n),
-  x1   = rnorm(n), x2 = rnorm(n), x3 = rnorm(n),   # main effects
-  x1sq = rnorm(n), x2sq = rnorm(n)                   # squared terms
-)
-fit2 <- lm(y ~ x1 + x2 + x3 + x1sq + x2sq, data = df)
-
+# Two groups: demographic variables and race/ethnicity variables
 P_index <- list(
-  main    = c("x1", "x2", "x3"),
-  squared = c("x1sq", "x2sq")
+  demographic = c("age", "female"),
+  race_eth    = c("race", "hispanic")
 )
 
-result_rbic <- compute_rbic(fit2, P_index = P_index)
+result_rbic <- compute_rbic(fit, P_index = P_index)
 result_rbic
 
-attr(result_rbic, "gamma")    # per-group gamma
+attr(result_rbic, "gamma")
 ```
 
 ---
@@ -141,19 +149,21 @@ For `glmnet` objects, all five criteria return a **vector** of length
 
 ```{r glmnet-example, eval = requireNamespace("glmnet", quietly = TRUE)}
 library(glmnet)
-set.seed(42)
-n  <- 200; p <- 20
-X  <- matrix(rnorm(n * p), n, p,
-             dimnames = list(NULL, paste0("x", 1:p)))
-y  <- X[, 1] * 2 - X[, 3] + X[, 7] * 0.5 + rnorm(n)
+
+# Create a model matrix from the covid_eol predictors
+X <- model.matrix(~ age + race + hispanic + female, data = covid_eol)[, -1]
+y <- covid_eol$ies_total
+p <- ncol(X)
 
 fit_glmnet <- glmnet(X, y, family = "gaussian")
 
 bic_path  <- compute_bic(fit_glmnet)
 ebic_path <- compute_ebic(fit_glmnet, P = p)
 rbic_path <- compute_rbic(fit_glmnet,
-                           P_index = list(first10  = paste0("x", 1:10),
-                                          second10 = paste0("x", 11:20)))
+                           P_index = list(
+                             demographic = c("age", "femaleYes"),
+                             race_eth    = c("raceBlack", "raceAsian",
+                                             "raceOther", "hispanicYes")))
 
 # Lambda selected by each criterion
 lambda_bic  <- attr(bic_path,  "lambda")[which.min(bic_path)]
@@ -175,19 +185,36 @@ coef(fit_glmnet, s = lambda_bic)
 
 ---
 
-## 5. Stepwise selection with `ic_step()`
+## 5. Expanding scope with `expand_scope()`
+
+When searching for interactions and polynomials, the number of candidate
+terms grows quickly and constructing the `P_index` by hand becomes tedious.
+`expand_scope()` automates this: given a base formula, it generates the
+expanded formula and a `P_index` grouped by term type.
+
+```{r expand-scope}
+# Expand to pairwise interactions + quadratic terms
+es <- expand_scope(ies_total ~ age + race + hispanic + female,
+                   data = covid_eol, k = 2, poly = 2)
+es$formula
+es$P_index
+```
+
+---
+
+## 6. Stepwise selection with `ic_step()`
 
 `ic_step()` extends `MASS::stepAIC` to all five criteria for `lm`/`glm`
-objects.
+objects. Combined with `expand_scope()`, it makes RBIC-guided stepwise
+selection through interactions straightforward.
 
 ```{r ic-step-example}
-fit_null <- lm(mpg ~ 1,  data = mtcars)
-fit_full <- lm(mpg ~ .,  data = mtcars)
+fit_null <- lm(ies_total ~ 1, data = covid_eol)
 
-# Forward BIC selection
+# Forward BIC selection through pairwise interactions + quadratic terms
 selected <- ic_step(
   fit_null,
-  scope     = list(lower = fit_null, upper = fit_full),
+  scope     = list(lower = ~ 1, upper = es$formula),
   direction = "forward",
   criterion = "BIC",
   trace     = 1
@@ -203,54 +230,54 @@ formula(selected)
 attr(selected, "step_path")
 ```
 
-### RBIC stepwise selection
-
-For RBIC, supply `P_index` with term labels that match the scope's upper model:
-
-```{r rbic-step, eval = FALSE}
-P_index <- list(
-  continuous   = c("wt", "hp", "disp", "drat", "qsec"),
-  categorical  = c("cyl", "gear", "carb", "am", "vs")
-)
-
-ic_step(
-  fit_null,
-  scope     = list(lower = fit_null, upper = fit_full),
-  direction = "forward",
-  criterion = "RBIC",
-  P_index   = P_index,
-  trace     = 1
-)
-```
-
 ---
 
-## 6. Comparing criteria on simulated data
+## 7. Comparing criteria on a simulation
 
-```{r comparison}
+The ranked sparsity advantage of RBIC is most apparent when the candidate
+set includes many derived variables (interactions, polynomials) that inflate
+the search space. We illustrate with a simulation where the true model has
+10 main-effect candidates but only 3 active main effects and 1 active
+interaction — a sparse signal embedded in 65 candidate terms.
+
+```{r sim-setup}
+set.seed(42)
+n <- 200; p <- 10
+X <- matrix(rnorm(n * p), n, p,
+            dimnames = list(NULL, paste0("x", 1:p)))
+y <- 2*X[,1] - 1.5*X[,2] + X[,3] + 1.5*X[,1]*X[,2] + rnorm(n, sd = 2)
+sim_data <- as.data.frame(cbind(y = y, X))
+
+sim_es <- expand_scope(
+  y ~ x1 + x2 + x3 + x4 + x5 + x6 + x7 + x8 + x9 + x10,
+  data = sim_data, k = 2, poly = 2
+)
+# 10 main + 10 quadratic + 45 pairwise = 65 candidates
+sapply(sim_es$P_index, length)
+```
+
+We split into training and test sets, then compare backward stepwise
+selection under AIC, BIC, and RBIC:
+
+```{r comparison, warning = FALSE}
 set.seed(2026)
-n <- 80; p_true <- 3; p_total <- 15
-X_mat <- matrix(rnorm(n * p_total), n, p_total,
-                dimnames = list(NULL, paste0("x", 1:p_total)))
-beta  <- c(2, -1.5, 1, rep(0, p_total - p_true))
-y_sim <- X_mat %*% beta + rnorm(n, sd = 2)
-df_sim <- as.data.frame(cbind(y = y_sim, X_mat))
+train_idx <- sample(n, n %/% 2)
+train <- sim_data[train_idx, ]
+test  <- sim_data[-train_idx, ]
 
-fit_null_sim <- lm(y ~ 1,  data = df_sim)
-fit_full_sim <- lm(y ~ .,  data = df_sim)
+fit_full <- lm(sim_es$formula, data = train)
+scope    <- list(lower = ~ 1, upper = sim_es$formula)
 
-criteria <- c("AIC", "AICc", "BIC", "EBIC", "RBIC")
+true_terms <- c("x1", "x2", "x3", "x1:x2")
+
+criteria <- c("AIC", "BIC", "RBIC")
 results  <- lapply(criteria, function(crit) {
   extra_args <- list()
-  if (crit == "EBIC") extra_args <- list(P = p_total)
-  if (crit == "RBIC") extra_args <- list(
-    P_index = list(first5 = paste0("x", 1:5),
-                   rest   = paste0("x", 6:p_total))
-  )
+  if (crit == "RBIC") extra_args <- list(P_index = sim_es$P_index)
   do.call(ic_step, c(
-    list(object    = fit_null_sim,
-         scope     = list(lower = fit_null_sim, upper = fit_full_sim),
-         direction = "forward",
+    list(object    = fit_full,
+         scope     = scope,
+         direction = "backward",
          criterion = crit,
          trace     = 0),
     extra_args
@@ -258,9 +285,28 @@ results  <- lapply(criteria, function(crit) {
 })
 names(results) <- criteria
 
-# Number of terms selected by each criterion
-sapply(results, function(m) length(attr(terms(m), "term.labels")))
+# Count terms by type, false positives, and test-set RMSPE
+summary_tab <- t(sapply(results, function(m) {
+  sel  <- attr(terms(m), "term.labels")
+  pred <- predict(m, newdata = test)
+  rmspe <- sqrt(mean((test$y - pred)^2))
+  c(main       = sum(sel %in% sim_es$P_index$main),
+    poly       = sum(sel %in% sim_es$P_index$poly_2),
+    interact   = sum(sel %in% sim_es$P_index$interact_2),
+    total      = length(sel),
+    true_pos   = sum(sel %in% true_terms),
+    false_pos  = sum(!sel %in% true_terms),
+    RMSPE      = round(rmspe, 3))
+}))
+summary_tab
 ```
+
+RBIC recovers the true model exactly — 4 true positives with 0 false
+positives — and achieves by far the best prediction accuracy. BIC retains
+many spurious interactions and polynomials despite its heavier penalty,
+because it treats all 65 candidates with equal skepticism. RBIC's
+group-specific penalties allow the true interaction (`x1:x2`) to enter
+while correctly excluding the 44 noise interactions.
 
 ---
 

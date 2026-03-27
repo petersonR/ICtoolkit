@@ -66,6 +66,7 @@
 #'         criterion = "EBIC",
 #'         P         = ncol(mtcars) - 1L)
 #'
+#' @importFrom stats update
 #' @export
 ic_step <- function(object,
                     scope,
