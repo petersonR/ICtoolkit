@@ -1,0 +1,40 @@
+Package: ICtoolkit
+Type: Package
+Title: Information Criteria for Penalized and Stepwise Model Selection
+Version: 0.1.0
+Date: 2026-03-27
+Authors@R: person("Ryan A", "Peterson", , "ryan-peterson@uiowa.edu", 
+    role = c("aut", "cre"),
+      comment = c(ORCID = "0000-0002-4650-5798")
+    )
+Description: Provides a unified interface for computing information criteria —
+    AIC, AICc, BIC, EBIC, and RBIC — for models of class 'lm', 'glm',
+    'glmnet', and 'ncvreg'. For 'glmnet' and 'ncvreg' objects, criteria are
+    computed across the full regularization path, returning a vector of values
+    (one per lambda). EBIC (Extended BIC) applies a group-size penalty
+    controlled by a tuning parameter gamma. RBIC (Regularized BIC) generalizes
+    EBIC to structured variable groups, making it suitable for multimodal or
+    hierarchically-organized predictors. A stepwise model selection function
+    'ic_step()' extends the approach of 'MASS::stepAIC' to support all five
+    criteria for 'lm' and 'glm' objects.
+License: GPL-3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends: R (>= 4.1.0)
+LazyData: true
+Imports:
+    stats
+Suggests:
+    glmnet,
+    ncvreg,
+    MASS,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    ggplot2,
+    dplyr
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+URL: https://github.com/petersonR/ICtoolkit
+BugReports: https://github.com/petersonR/ICtoolkit/issues

@@ -1,0 +1,279 @@
+---
+title: "Getting started with ICtoolkit"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with ICtoolkit}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  fig.width  = 6,
+  fig.height = 4
+)
+```
+
+```{r load}
+library(ICtoolkit)
+```
+
+## Overview
+
+ICtoolkit provides a unified interface for five information criteria across four
+model classes:
+
+| Criterion | Function | Description |
+|-----------|----------|-------------|
+| AIC | `compute_aic()` | Akaike (1974) |
+| AICc | `compute_aicc()` | Small-sample correction |
+| BIC | `compute_bic()` | Schwarz (1978) |
+| EBIC | `compute_ebic()` | Extended BIC; Chen & Chen (2008) |
+| RBIC | `compute_rbic()` | Grouped EBIC for structured predictors |
+
+All functions support `lm`, `glm`, `glmnet`, and `ncvreg` objects.
+For `glmnet` and `ncvreg`, the criterion is evaluated at every point on the
+regularization path (one value per `lambda`), which can itself be used as a
+selection algorithm without any stepwise fitting.
+
+---
+
+## 1. Standard criteria for `lm` and `glm`
+
+```{r lm-example}
+fit <- lm(mpg ~ wt + hp + cyl, data = mtcars)
+
+compute_aic(fit)
+compute_aicc(fit)
+compute_bic(fit)
+```
+
+Each result is a scalar with informative attributes:
+
+```{r attributes}
+result <- compute_bic(fit)
+attr(result, "fit_class")   # model class
+attr(result, "k")           # number of estimated parameters
+attr(result, "criterion")   # which IC
+```
+
+---
+
+## 2. EBIC: Extended BIC
+
+EBIC adds a sparsity-encouraging penalty to BIC:
+
+$$\text{EBIC} = \text{BIC} + 2\,\gamma\,\log\binom{P}{k}$$
+
+where $P$ is the total number of candidate predictors and $k$ is the number
+selected.  The default $\gamma$ follows Chen & Chen (2008):
+
+$$\gamma = \frac{\log(P/\sqrt{n})}{\log P} \cdot \mathbf{1}(P \geq \sqrt{n})$$
+
+```{r ebic-lm}
+# P = 10 candidate predictors (total, excluding intercept)
+result_ebic <- compute_ebic(fit, P = 10)
+result_ebic
+
+attr(result_ebic, "gamma")   # the computed gamma
+attr(result_ebic, "P")
+```
+
+You can supply your own `gammafn`:
+
+```{r ebic-custom-gamma}
+# Fixed gamma = 0.5
+compute_ebic(fit, P = 10, gammafn = function(P, k, n) 0.5)
+```
+
+Setting `gammafn = function(P, k, n) 0` recovers standard BIC:
+
+```{r ebic-zero-gamma}
+all.equal(
+  as.numeric(compute_ebic(fit, P = 10, gammafn = function(P, k, n) 0)),
+  as.numeric(compute_bic(fit))
+)
+```
+
+---
+
+## 3. RBIC: Grouped EBIC for structured predictors
+
+RBIC generalises EBIC to predictors with a natural group structure (e.g.,
+main effects vs. interactions, or predictors from different data modalities):
+
+$$\text{RBIC} = \text{BIC} + 2 \sum_{g=1}^{G} \gamma_g \log\binom{P_g}{k_g}$$
+
+Groups are defined via a `P_index` list.  For `lm`/`glm` objects, each
+element should be a character vector of **term labels** exactly as returned
+by `attr(terms(fit), "term.labels")`.
+
+```{r rbic-setup}
+set.seed(1)
+n  <- 100
+df <- data.frame(
+  y    = rnorm(n),
+  x1   = rnorm(n), x2 = rnorm(n), x3 = rnorm(n),   # main effects
+  x1sq = rnorm(n), x2sq = rnorm(n)                   # squared terms
+)
+fit2 <- lm(y ~ x1 + x2 + x3 + x1sq + x2sq, data = df)
+
+P_index <- list(
+  main    = c("x1", "x2", "x3"),
+  squared = c("x1sq", "x2sq")
+)
+
+result_rbic <- compute_rbic(fit2, P_index = P_index)
+result_rbic
+
+attr(result_rbic, "gamma")    # per-group gamma
+```
+
+---
+
+## 4. IC over the regularization path with `glmnet`
+
+For `glmnet` objects, all five criteria return a **vector** of length
+`length(lambda)`.  This makes IC-based selection straightforward: pick the
+`lambda` that minimises the criterion.
+
+```{r glmnet-example, eval = requireNamespace("glmnet", quietly = TRUE)}
+library(glmnet)
+set.seed(42)
+n  <- 200; p <- 20
+X  <- matrix(rnorm(n * p), n, p,
+             dimnames = list(NULL, paste0("x", 1:p)))
+y  <- X[, 1] * 2 - X[, 3] + X[, 7] * 0.5 + rnorm(n)
+
+fit_glmnet <- glmnet(X, y, family = "gaussian")
+
+bic_path  <- compute_bic(fit_glmnet)
+ebic_path <- compute_ebic(fit_glmnet, P = p)
+rbic_path <- compute_rbic(fit_glmnet,
+                           P_index = list(first10  = paste0("x", 1:10),
+                                          second10 = paste0("x", 11:20)))
+
+# Lambda selected by each criterion
+lambda_bic  <- attr(bic_path,  "lambda")[which.min(bic_path)]
+lambda_ebic <- attr(ebic_path, "lambda")[which.min(ebic_path)]
+lambda_rbic <- attr(rbic_path, "lambda")[which.min(rbic_path)]
+
+cat("BIC-selected lambda: ",  round(lambda_bic,  4), "\n")
+cat("EBIC-selected lambda:", round(lambda_ebic, 4), "\n")
+cat("RBIC-selected lambda:", round(lambda_rbic, 4), "\n")
+
+# Coefficients at BIC-optimal lambda
+coef(fit_glmnet, s = lambda_bic)
+```
+
+> **Note on alpha < 1:** When a `glmnet` model is fit with `alpha < 1`
+> (elastic-net or ridge), the package issues a warning because the count of
+> nonzero coefficients may not be an appropriate measure of model complexity
+> under L2 shrinkage.
+
+---
+
+## 5. Stepwise selection with `ic_step()`
+
+`ic_step()` extends `MASS::stepAIC` to all five criteria for `lm`/`glm`
+objects.
+
+```{r ic-step-example}
+fit_null <- lm(mpg ~ 1,  data = mtcars)
+fit_full <- lm(mpg ~ .,  data = mtcars)
+
+# Forward BIC selection
+selected <- ic_step(
+  fit_null,
+  scope     = list(lower = fit_null, upper = fit_full),
+  direction = "forward",
+  criterion = "BIC",
+  trace     = 1
+)
+formula(selected)
+```
+
+### Inspecting the selection path
+
+`ic_step()` attaches a `step_path` data frame to the returned model:
+
+```{r step-path}
+attr(selected, "step_path")
+```
+
+### RBIC stepwise selection
+
+For RBIC, supply `P_index` with term labels that match the scope's upper model:
+
+```{r rbic-step, eval = FALSE}
+P_index <- list(
+  continuous   = c("wt", "hp", "disp", "drat", "qsec"),
+  categorical  = c("cyl", "gear", "carb", "am", "vs")
+)
+
+ic_step(
+  fit_null,
+  scope     = list(lower = fit_null, upper = fit_full),
+  direction = "forward",
+  criterion = "RBIC",
+  P_index   = P_index,
+  trace     = 1
+)
+```
+
+---
+
+## 6. Comparing criteria on simulated data
+
+```{r comparison}
+set.seed(2026)
+n <- 80; p_true <- 3; p_total <- 15
+X_mat <- matrix(rnorm(n * p_total), n, p_total,
+                dimnames = list(NULL, paste0("x", 1:p_total)))
+beta  <- c(2, -1.5, 1, rep(0, p_total - p_true))
+y_sim <- X_mat %*% beta + rnorm(n, sd = 2)
+df_sim <- as.data.frame(cbind(y = y_sim, X_mat))
+
+fit_null_sim <- lm(y ~ 1,  data = df_sim)
+fit_full_sim <- lm(y ~ .,  data = df_sim)
+
+criteria <- c("AIC", "AICc", "BIC", "EBIC", "RBIC")
+results  <- lapply(criteria, function(crit) {
+  extra_args <- list()
+  if (crit == "EBIC") extra_args <- list(P = p_total)
+  if (crit == "RBIC") extra_args <- list(
+    P_index = list(first5 = paste0("x", 1:5),
+                   rest   = paste0("x", 6:p_total))
+  )
+  do.call(ic_step, c(
+    list(object    = fit_null_sim,
+         scope     = list(lower = fit_null_sim, upper = fit_full_sim),
+         direction = "forward",
+         criterion = crit,
+         trace     = 0),
+    extra_args
+  ))
+})
+names(results) <- criteria
+
+# Number of terms selected by each criterion
+sapply(results, function(m) length(attr(terms(m), "term.labels")))
+```
+
+---
+
+## References
+
+Akaike, H. (1974). A new look at the statistical model identification.
+*IEEE Transactions on Automatic Control*, **19**(6), 716–723.
+
+Chen, J., & Chen, Z. (2008). Extended Bayesian information criteria for model
+selection with large model spaces. *Biometrika*, **95**(3), 759–771.
+
+Hurvich, C. M., & Tsai, C.-L. (1989). Regression and time series model
+selection in small samples. *Biometrika*, **76**(2), 297–307.
+
+Schwarz, G. (1978). Estimating the dimension of a model.
+*The Annals of Statistics*, **6**(2), 461–464.

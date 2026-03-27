@@ -1,0 +1,137 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  fig.path  = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# ICtoolkit
+
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/petersonR/ICtoolkit/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/petersonR/ICtoolkit/actions/workflows/R-CMD-check.yaml)
+[![Codecov](https://codecov.io/gh/petersonR/ICtoolkit/branch/main/graph/badge.svg)](https://app.codecov.io/gh/petersonR/ICtoolkit)
+<!-- badges: end -->
+
+ICtoolkit provides a unified interface for computing five information criteria
+across four model classes, plus a flexible stepwise selection function.
+
+| Criterion | Function | Reference |
+|-----------|----------|-----------|
+| AIC | `compute_aic()` | Akaike (1974) |
+| AICc | `compute_aicc()` | Hurvich & Tsai (1989) |
+| BIC | `compute_bic()` | Schwarz (1978) |
+| EBIC | `compute_ebic()` | Chen & Chen (2008) |
+| RBIC | `compute_rbic()` | Peterson & Cavanaugh (2026+) |
+
+**Supported model classes:** `lm`, `glm`, `glmnet`, `ncvreg`.
+For `glmnet` and `ncvreg`, each criterion returns a vector of length
+`length(lambda)` — one value per point on the regularization path.
+
+## Installation
+
+```r
+# Development version from this repository:
+# devtools::install_local("ICtoolkit")
+
+# Or once on CRAN:
+# install.packages("ICtoolkit")
+```
+
+## Quick start
+
+### IC for `lm` / `glm`
+
+```{r lm-quick}
+library(ICtoolkit)
+
+fit <- lm(mpg ~ wt + hp + cyl, data = mtcars)
+compute_aic(fit)
+compute_bic(fit)
+compute_ebic(fit, P = 10)   # P = total candidate predictors
+```
+
+Results carry informative attributes:
+
+```{r attrs}
+result <- compute_bic(fit)
+attr(result, "fit_class")
+attr(result, "k")
+attr(result, "criterion")
+```
+
+### IC over the regularization path (`glmnet`)
+
+```{r glmnet-quick, eval = requireNamespace("glmnet", quietly = TRUE)}
+library(glmnet)
+
+n <- 100
+p <- 50
+
+set.seed(1)
+
+X <- matrix(rnorm(n * p), n, p,
+            dimnames = list(NULL, paste0("x", 1:p)))
+y <- X[, 1] * 2 - X[, 3] * 0.25 + rnorm(n)
+fit_glmnet <- glmnet(X, y)
+
+# plot_ic_path computes + plots IC paths in one call.
+plot_ic_path(fit_glmnet, criteria = c("AIC", "BIC", "EBIC"),
+             main = "IC paths for glmnet")
+```
+
+### RBIC for grouped predictors
+
+RBIC applies group-specific EBIC penalties — useful when predictors have a
+natural structure (e.g., main effects vs. interactions, or different data
+modalities):
+
+```{r rbic-quick}
+P_index <- list(
+  main         = c("wt", "hp", "disp"),
+  categorical  = c("cyl", "gear", "carb", "am", "vs")
+)
+compute_rbic(fit, P_index = P_index)
+```
+
+### Stepwise selection with `ic_step()`
+
+`ic_step()` generalises `MASS::stepAIC` to all five criteria:
+
+```{r step-quick}
+fit_null <- lm(mpg ~ 1, data = mtcars)
+fit_full <- lm(mpg ~ ., data = mtcars)
+
+selected <- ic_step(
+  fit_null,
+  scope     = list(lower = fit_null, upper = fit_full),
+  direction = "both",
+  criterion = "BIC",
+  trace     = 1
+)
+formula(selected)
+
+# The selection path is stored as an attribute
+attr(selected, "step_path")
+```
+
+## References
+
+Akaike, H. (1974). A new look at the statistical model identification.
+*IEEE Transactions on Automatic Control*, 19(6), 716–723.
+
+Chen, J., & Chen, Z. (2008). Extended Bayesian information criteria for model
+selection with large model spaces. *Biometrika*, 95(3), 759–771.
+
+Hurvich, C. M., & Tsai, C.-L. (1989). Regression and time series model
+selection in small samples. *Biometrika*, 76(2), 297–307.
+
+Schwarz, G. (1978). Estimating the dimension of a model.
+*The Annals of Statistics*, 6(2), 461–464.
