@@ -1,43 +1,33 @@
----
-output: github_document
----
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  collapse  = TRUE,
-  comment   = "#>",
-  fig.path  = "man/figures/README-",
-  out.width = "100%"
-)
-```
 
 # ICtoolkit
 
 <!-- badges: start -->
+
 [![R-CMD-check](https://github.com/petersonR/ICtoolkit/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/petersonR/ICtoolkit/actions/workflows/R-CMD-check.yaml)
 [![Codecov](https://codecov.io/gh/petersonR/ICtoolkit/branch/main/graph/badge.svg)](https://app.codecov.io/gh/petersonR/ICtoolkit)
 <!-- badges: end -->
 
-ICtoolkit provides a unified interface for computing five information criteria
-across four model classes, plus a flexible stepwise selection function.
+ICtoolkit provides a unified interface for computing five information
+criteria across four model classes, plus a flexible stepwise selection
+function.
 
-| Criterion | Function | Reference |
-|-----------|----------|-----------|
-| AIC | `compute_aic()` | Akaike (1974) |
-| AICc | `compute_aicc()` | Hurvich & Tsai (1989) |
-| BIC | `compute_bic()` | Schwarz (1978) |
-| EBIC | `compute_ebic()` | Chen & Chen (2008) |
-| RBIC | `compute_rbic()` | Peterson & Cavanaugh (2026+) |
+| Criterion | Function         | Reference                    |
+|-----------|------------------|------------------------------|
+| AIC       | `compute_aic()`  | Akaike (1974)                |
+| AICc      | `compute_aicc()` | Hurvich & Tsai (1989)        |
+| BIC       | `compute_bic()`  | Schwarz (1978)               |
+| EBIC      | `compute_ebic()` | Chen & Chen (2008)           |
+| RBIC      | `compute_rbic()` | Peterson & Cavanaugh (2026+) |
 
-**Supported model classes:** `lm`, `glm`, `glmnet`, `ncvreg`.
-For `glmnet` and `ncvreg`, each criterion returns a vector of length
+**Supported model classes:** `lm`, `glm`, `glmnet`, `ncvreg`. For
+`glmnet` and `ncvreg`, each criterion returns a vector of length
 `length(lambda)` — one value per point on the regularization path.
 
 ## Installation
 
-```{r, eval = FALSE}
+``` r
 # Development version from this repository:
 devtools::install_github("petersonR/ICtoolkit")
 
@@ -49,28 +39,58 @@ install.packages("ICtoolkit")
 
 ### IC for `lm` / `glm`
 
-```{r lm-quick}
+``` r
 library(ICtoolkit)
 
 fit <- lm(mpg ~ wt + hp + cyl, data = mtcars)
 compute_aic(fit)
+#> [1] 155.4766
+#> attr(,"fit_class")
+#> [1] "lm"
+#> attr(,"k")
+#> [1] 4
+#> attr(,"criterion")
+#> [1] "AIC"
 compute_bic(fit)
+#> [1] 162.8053
+#> attr(,"fit_class")
+#> [1] "lm"
+#> attr(,"k")
+#> [1] 4
+#> attr(,"criterion")
+#> [1] "BIC"
 compute_ebic(fit, P = 10)   # P = total candidate predictors
+#> [1] 165.1744
+#> attr(,"fit_class")
+#> [1] "lm"
+#> attr(,"k")
+#> [1] 4
+#> attr(,"criterion")
+#> [1] "EBIC"
+#> attr(,"gamma")
+#> [1] 0.247425
+#> attr(,"P")
+#> [1] 10
 ```
 
 Results carry informative attributes:
 
-```{r attrs}
+``` r
 result <- compute_bic(fit)
 attr(result, "fit_class")
+#> [1] "lm"
 attr(result, "k")
+#> [1] 4
 attr(result, "criterion")
+#> [1] "BIC"
 ```
 
 ### IC over the regularization path (`glmnet`)
 
-```{r glmnet-quick, eval = requireNamespace("glmnet", quietly = TRUE)}
+``` r
 library(glmnet)
+#> Loading required package: Matrix
+#> Loaded glmnet 4.1-10
 
 n <- 100
 p <- 50
@@ -87,25 +107,42 @@ plot_ic_path(fit_glmnet, criteria = c("AIC", "BIC", "EBIC"),
              main = "IC paths for glmnet")
 ```
 
+<img src="man/figures/README-glmnet-quick-1.png" width="100%" />
+
 ### RBIC for grouped predictors
 
-RBIC applies group-specific EBIC penalties — useful when predictors have a
-natural structure (e.g., main effects vs. interactions, or different data
-modalities):
+RBIC applies group-specific EBIC penalties — useful when predictors have
+a natural structure (e.g., main effects vs. interactions, or different
+data modalities):
 
-```{r rbic-quick}
+``` r
 P_index <- list(
   main         = c("wt", "hp", "disp"),
   categorical  = c("cyl", "gear", "carb", "am", "vs")
 )
 compute_rbic(fit, P_index = P_index)
+#> [1] 163.708
+#> attr(,"fit_class")
+#> [1] "lm"
+#> attr(,"k")
+#> [1] 4
+#> attr(,"criterion")
+#> [1] "RBIC"
+#> attr(,"gamma")
+#> [1] 0.1666667
+#> attr(,"P_index")
+#> attr(,"P_index")$main
+#> [1] "wt"   "hp"   "disp"
+#> 
+#> attr(,"P_index")$categorical
+#> [1] "cyl"  "gear" "carb" "am"   "vs"
 ```
 
 ### Stepwise selection with `ic_step()`
 
 `ic_step()` generalises `MASS::stepAIC` to all five criteria:
 
-```{r step-quick}
+``` r
 fit_null <- lm(mpg ~ 1, data = mtcars)
 fit_full <- lm(mpg ~ ., data = mtcars)
 
@@ -117,9 +154,15 @@ selected <- ic_step(
   trace     = 0
 )
 formula(selected)
+#> mpg ~ wt + cyl
 
 # The selection path is stored as an attribute
 attr(selected, "step_path")
+#>   step  action      BIC
+#> 1    0 <start> 211.6870
+#> 2    1    + wt 170.4266
+#> 3    2   + cyl 161.8730
 ```
 
-This repository was drafted by Ryan Peterson. It has been refined using Claude 4.6.  
+This repository was drafted by Ryan Peterson. It has been refined using
+Claude 4.6.
