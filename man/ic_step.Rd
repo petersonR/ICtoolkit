@@ -8,9 +8,10 @@ ic_step(
   object,
   scope,
   direction = c("both", "backward", "forward"),
-  criterion = c("AIC", "AICc", "BIC", "EBIC", "RBIC"),
+  criterion = c("AIC", "AICc", "BIC", "HQIC", "EBIC", "RBIC", "mBIC", "mBIC2"),
   P = NULL,
   P_index = NULL,
+  kappa = 4,
   gamma = "ebic",
   trace = 1L,
   steps = 1000L
@@ -24,8 +25,8 @@ specifying the model search space.  See \code{\link[MASS:stepAIC]{MASS::stepAIC(
 
 \item{direction}{One of \code{"both"} (default), \code{"backward"}, or \code{"forward"}.}
 
-\item{criterion}{One of \code{"AIC"} (default), \code{"AICc"}, \code{"BIC"}, \code{"EBIC"},
-or \code{"RBIC"}.}
+\item{criterion}{One of \code{"AIC"} (default), \code{"AICc"}, \code{"BIC"}, \code{"HQIC"},
+\code{"EBIC"}, \code{"RBIC"}, \code{"mBIC"}, or \code{"mBIC2"}.}
 
 \item{P}{Integer. Total number of candidate predictors.  Required only
 for \code{criterion = "EBIC"}.}
@@ -33,9 +34,14 @@ for \code{criterion = "EBIC"}.}
 \item{P_index}{Named list of character vectors defining variable groups.
 Required only for \code{criterion = "RBIC"}.  See Details.}
 
+\item{kappa}{Positive numeric scalar controlling the prior expected number
+of true signals.  Used only for \code{criterion = "mBIC"} or \code{"mBIC2"}.
+Default \code{4}.  See \code{\link[=compute_mbic]{compute_mbic()}}.}
+
 \item{gamma}{Gamma specification passed to \code{\link[=compute_ebic]{compute_ebic()}} or
-\code{\link[=compute_rbic]{compute_rbic()}}.  Ignored for AIC / AICc / BIC.  See those functions
-for accepted values (\code{"ebic"}, \code{"per_group"}, numeric, or a function).}
+\code{\link[=compute_rbic]{compute_rbic()}}.  Ignored for AIC / AICc / BIC / HQIC / mBIC / mBIC2.
+See those functions for accepted values (\code{"ebic"}, \code{"per_group"}, numeric,
+or a function).}
 
 \item{trace}{Integer controlling verbosity.  \code{0} = silent, \code{1} = one line
 per accepted step (default), \code{2} = all candidates at each step.}
@@ -50,8 +56,8 @@ value after that step.
 }
 \description{
 Performs forward, backward, or bidirectional stepwise model selection for
-\code{lm} and \code{glm} objects using any of the five information criteria provided
-by ICtoolkit: AIC, AICc, BIC, EBIC, or RBIC.
+\code{lm} and \code{glm} objects using any of the information criteria provided
+by ICtoolkit: AIC, AICc, BIC, HQIC, EBIC, RBIC, mBIC, or mBIC2.
 }
 \details{
 At each step, all single-term additions (forward) and/or deletions
@@ -101,5 +107,6 @@ ic_step(fit_null,
 }
 \seealso{
 \code{\link[=compute_aic]{compute_aic()}}, \code{\link[=compute_aicc]{compute_aicc()}}, \code{\link[=compute_bic]{compute_bic()}},
-\code{\link[=compute_ebic]{compute_ebic()}}, \code{\link[=compute_rbic]{compute_rbic()}}, \code{\link[MASS:stepAIC]{MASS::stepAIC()}}
+\code{\link[=compute_hqic]{compute_hqic()}}, \code{\link[=compute_ebic]{compute_ebic()}}, \code{\link[=compute_rbic]{compute_rbic()}},
+\code{\link[=compute_mbic]{compute_mbic()}}, \code{\link[=compute_mbic2]{compute_mbic2()}}, \code{\link[MASS:stepAIC]{MASS::stepAIC()}}
 }

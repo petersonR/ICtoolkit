@@ -101,6 +101,34 @@
   ifelse(k <= 0 | k >= n, 0, lchoose(n, k))
 }
 
+# ---------------------------------------------------------------------------
+# mBIC / mBIC2 helpers
+# ---------------------------------------------------------------------------
+
+# Validate that P > kappa (required for log(P/kappa - 1) to be defined).
+.check_kappa <- function(P, kappa) {
+  if (!is.numeric(kappa) || length(kappa) != 1 || kappa <= 0)
+    stop("'kappa' must be a positive numeric scalar.")
+  if (P <= kappa)
+    stop("'P' must be greater than 'kappa' (got P = ", P, ", kappa = ", kappa, ").")
+}
+
+# mBIC extra penalty beyond BIC: 2 * k_pred * log(P/kappa - 1).
+# Vectorised over k_pred.
+.mbic_penalty <- function(k_pred, P, kappa) {
+  2 * k_pred * log(P / kappa - 1)
+}
+
+# mBIC2 extra penalty beyond BIC: mBIC penalty minus 2*log(C(P, k_pred)).
+# Vectorised over k_pred.
+.mbic2_penalty <- function(k_pred, P, kappa) {
+  .mbic_penalty(k_pred, P, kappa) - 2 * .log_choose(P, k_pred)
+}
+
+# ---------------------------------------------------------------------------
+# AICc helper
+# ---------------------------------------------------------------------------
+
 # AICc small-sample correction term: 2k(k+1)/(n-k-1).
 # Vectorised over k. Returns NA where n <= k+1.
 .aicc_correction <- function(k, n) {

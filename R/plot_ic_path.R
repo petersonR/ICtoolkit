@@ -7,11 +7,14 @@
 #'
 #' @param fit A fitted `glmnet` or `ncvreg` object.
 #' @param criteria Character vector of criteria to plot.  One or more of
-#'   `"AIC"`, `"AICc"`, `"BIC"`, `"EBIC"`, `"RBIC"`.  Default `c("AIC", "BIC")`.
+#'   `"AIC"`, `"AICc"`, `"BIC"`, `"HQIC"`, `"EBIC"`, `"RBIC"`, `"mBIC"`,
+#'   `"mBIC2"`.  Default `c("AIC", "BIC")`.
 #' @param P Integer. Total candidate predictors (excluding intercept).
 #'   Required when `"EBIC"` is in `criteria`.
 #' @param P_index Named list of variable groups.  Required when `"RBIC"` is
 #'   in `criteria`.  See [compute_rbic()] for format details.
+#' @param kappa Positive numeric scalar for mBIC / mBIC2.  Default `4`.
+#'   See [compute_mbic()].
 #' @param gamma Gamma specification for EBIC / RBIC.  Default `"ebic"`.
 #'   See [compute_ebic()] for accepted values.
 #' @param xvar What to place on the x-axis.  One of `"-log(lambda)"` (default),
@@ -56,6 +59,7 @@ plot_ic_path <- function(fit,
                           criteria  = c("AIC", "BIC"),
                           P         = NULL,
                           P_index   = NULL,
+                          kappa     = 4,
                           gamma     = "ebic",
                           xvar      = c("-log(lambda)", "log(lambda)", "lambda"),
                           mark_min  = TRUE,
@@ -67,7 +71,7 @@ plot_ic_path <- function(fit,
   if (!inherits(fit, c("glmnet", "ncvreg")))
     stop("'fit' must be a glmnet or ncvreg object.")
 
-  valid_criteria <- c("AIC", "AICc", "BIC", "EBIC", "RBIC")
+  valid_criteria <- c("AIC", "AICc", "BIC", "HQIC", "EBIC", "RBIC", "mBIC", "mBIC2")
   bad <- setdiff(criteria, valid_criteria)
   if (length(bad))
     stop("Unknown criteria: ", paste(bad, collapse = ", "),
@@ -82,11 +86,14 @@ plot_ic_path <- function(fit,
   # ---- compute each criterion -----------------------------------------------
   ic_vals <- lapply(criteria, function(crit) {
     suppressWarnings(as.numeric(switch(crit,
-      AIC  = compute_aic(fit),
-      AICc = compute_aicc(fit),
-      BIC  = compute_bic(fit),
-      EBIC = compute_ebic(fit, P = P, gamma = gamma),   # P=NULL is OK: inferred
-      RBIC = compute_rbic(fit, P_index = P_index, gamma = gamma)
+      AIC   = compute_aic(fit),
+      AICc  = compute_aicc(fit),
+      BIC   = compute_bic(fit),
+      HQIC  = compute_hqic(fit),
+      EBIC  = compute_ebic(fit, P = P, gamma = gamma),
+      RBIC  = compute_rbic(fit, P_index = P_index, gamma = gamma),
+      mBIC  = compute_mbic(fit, P = P, kappa = kappa),
+      mBIC2 = compute_mbic2(fit, P = P, kappa = kappa)
     )))
   })
   names(ic_vals) <- criteria

@@ -9,6 +9,7 @@ plot_ic_path(
   criteria = c("AIC", "BIC"),
   P = NULL,
   P_index = NULL,
+  kappa = 4,
   gamma = "ebic",
   xvar = c("-log(lambda)", "log(lambda)", "lambda"),
   mark_min = TRUE,
@@ -22,13 +23,17 @@ plot_ic_path(
 \item{fit}{A fitted \code{glmnet} or \code{ncvreg} object.}
 
 \item{criteria}{Character vector of criteria to plot.  One or more of
-\code{"AIC"}, \code{"AICc"}, \code{"BIC"}, \code{"EBIC"}, \code{"RBIC"}.  Default \code{c("AIC", "BIC")}.}
+\code{"AIC"}, \code{"AICc"}, \code{"BIC"}, \code{"HQIC"}, \code{"EBIC"}, \code{"RBIC"}, \code{"mBIC"},
+\code{"mBIC2"}.  Default \code{c("AIC", "BIC")}.}
 
 \item{P}{Integer. Total candidate predictors (excluding intercept).
 Required when \code{"EBIC"} is in \code{criteria}.}
 
 \item{P_index}{Named list of variable groups.  Required when \code{"RBIC"} is
 in \code{criteria}.  See \code{\link[=compute_rbic]{compute_rbic()}} for format details.}
+
+\item{kappa}{Positive numeric scalar for mBIC / mBIC2.  Default \code{4}.
+See \code{\link[=compute_mbic]{compute_mbic()}}.}
 
 \item{gamma}{Gamma specification for EBIC / RBIC.  Default \code{"ebic"}.
 See \code{\link[=compute_ebic]{compute_ebic()}} for accepted values.}

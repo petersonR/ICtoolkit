@@ -19,7 +19,7 @@
 test_that("ic_step returns the same class as the input", {
   d        <- .make_step_data()
   fit_null <- lm(ies_total ~ 1, data = d)
-  fit_full <- lm(ies_total ~ age + I(age^2) + race + hispanic + female +
+  fit_full <- lm(ies_total ~ age + I(age^2) + race + ethnicity + sex +
     noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8, data = d)
   result <- ic_step(fit_null,
                     scope     = list(lower = fit_null, upper = fit_full),
@@ -31,7 +31,7 @@ test_that("ic_step returns the same class as the input", {
 
 test_that("ic_step attaches step_path attribute", {
   d        <- .make_step_data()
-  fit_full <- lm(ies_total ~ age + I(age^2) + race + hispanic + female +
+  fit_full <- lm(ies_total ~ age + I(age^2) + race + ethnicity + sex +
     noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8, data = d)
   result <- ic_step(fit_full, direction = "backward", criterion = "BIC", trace = 0)
   path   <- attr(result, "step_path")
@@ -43,7 +43,7 @@ test_that("ic_step attaches step_path attribute", {
 
 test_that("ic_step errors without P for EBIC", {
   fit_null <- lm(ies_total ~ 1, data = covid_eol)
-  fit_full <- lm(ies_total ~ age + female, data = covid_eol)
+  fit_full <- lm(ies_total ~ age + sex, data = covid_eol)
   expect_error(
     ic_step(fit_null, scope = list(lower = fit_null, upper = fit_full),
             criterion = "EBIC", trace = 0),
@@ -53,12 +53,68 @@ test_that("ic_step errors without P for EBIC", {
 
 test_that("ic_step errors without P_index for RBIC", {
   fit_null <- lm(ies_total ~ 1, data = covid_eol)
-  fit_full <- lm(ies_total ~ age + female, data = covid_eol)
+  fit_full <- lm(ies_total ~ age + sex, data = covid_eol)
   expect_error(
     ic_step(fit_null, scope = list(lower = fit_null, upper = fit_full),
             criterion = "RBIC", trace = 0),
     "'P_index'"
   )
+})
+
+test_that("ic_step errors without P for mBIC", {
+  fit_null <- lm(ies_total ~ 1, data = covid_eol)
+  fit_full <- lm(ies_total ~ age + sex, data = covid_eol)
+  expect_error(
+    ic_step(fit_null, scope = list(lower = fit_null, upper = fit_full),
+            criterion = "mBIC", trace = 0),
+    "'P'"
+  )
+})
+
+test_that("ic_step errors without P for mBIC2", {
+  fit_null <- lm(ies_total ~ 1, data = covid_eol)
+  fit_full <- lm(ies_total ~ age + sex, data = covid_eol)
+  expect_error(
+    ic_step(fit_null, scope = list(lower = fit_null, upper = fit_full),
+            criterion = "mBIC2", trace = 0),
+    "'P'"
+  )
+})
+
+test_that("ic_step forward HQIC runs and returns lm", {
+  d        <- .make_step_data()
+  fit_null <- lm(ies_total ~ 1, data = d)
+  scope    <- list(lower = ~ 1, upper = ies_total ~ age + I(age^2) + race + ethnicity + sex +
+    noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8)
+  result <- ic_step(fit_null, scope = scope, direction = "forward",
+                    criterion = "HQIC", trace = 0)
+  expect_s3_class(result, "lm")
+  path <- attr(result, "step_path")
+  expect_true("HQIC" %in% names(path))
+})
+
+test_that("ic_step forward mBIC runs and returns lm", {
+  d        <- .make_step_data()
+  fit_null <- lm(ies_total ~ 1, data = d)
+  scope    <- list(lower = ~ 1, upper = ies_total ~ age + I(age^2) + race + ethnicity + sex +
+    noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8)
+  result <- ic_step(fit_null, scope = scope, direction = "forward",
+                    criterion = "mBIC", P = 13, kappa = 4, trace = 0)
+  expect_s3_class(result, "lm")
+  path <- attr(result, "step_path")
+  expect_true("mBIC" %in% names(path))
+})
+
+test_that("ic_step forward mBIC2 runs and returns lm", {
+  d        <- .make_step_data()
+  fit_null <- lm(ies_total ~ 1, data = d)
+  scope    <- list(lower = ~ 1, upper = ies_total ~ age + I(age^2) + race + ethnicity + sex +
+    noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8)
+  result <- ic_step(fit_null, scope = scope, direction = "forward",
+                    criterion = "mBIC2", P = 13, kappa = 4, trace = 0)
+  expect_s3_class(result, "lm")
+  path <- attr(result, "step_path")
+  expect_true("mBIC2" %in% names(path))
 })
 
 test_that("ic_step backward from null model returns null model immediately", {
@@ -69,7 +125,7 @@ test_that("ic_step backward from null model returns null model immediately", {
 
 test_that("ic_step respects lower bound", {
   d         <- .make_step_data()
-  fit_start <- lm(ies_total ~ age + I(age^2) + race + hispanic + female +
+  fit_start <- lm(ies_total ~ age + I(age^2) + race + ethnicity + sex +
     noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8, data = d)
   fit_lower <- lm(ies_total ~ age, data = d)
   result <- ic_step(fit_start,
@@ -86,7 +142,7 @@ test_that("ic_step respects lower bound", {
 
 test_that("ic_step backward AIC matches MASS::stepAIC backward on lm", {
   d        <- .make_step_data()
-  fit_full <- lm(ies_total ~ age + I(age^2) + race + hispanic + female +
+  fit_full <- lm(ies_total ~ age + I(age^2) + race + ethnicity + sex +
     noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8, data = d)
   res_ours <- ic_step(fit_full, direction = "backward", criterion = "AIC", trace = 0)
   res_mass <- MASS::stepAIC(fit_full, direction = "backward", trace = 0)
@@ -97,7 +153,7 @@ test_that("ic_step backward AIC matches MASS::stepAIC backward on lm", {
 test_that("ic_step forward AIC matches MASS::stepAIC forward on lm", {
   d        <- .make_step_data()
   fit_null <- lm(ies_total ~ 1, data = d)
-  scope    <- list(lower = ~ 1, upper = ies_total ~ age + I(age^2) + race + hispanic + female +
+  scope    <- list(lower = ~ 1, upper = ies_total ~ age + I(age^2) + race + ethnicity + sex +
     noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8)
   res_ours <- ic_step(fit_null, scope = scope, direction = "forward",
                       criterion = "AIC", trace = 0)
@@ -110,7 +166,7 @@ test_that("ic_step forward AIC matches MASS::stepAIC forward on lm", {
 test_that("ic_step both AIC matches MASS::stepAIC both on lm", {
   d        <- .make_step_data()
   fit_null <- lm(ies_total ~ 1, data = d)
-  scope    <- list(lower = ~ 1, upper = ies_total ~ age + I(age^2) + race + hispanic + female +
+  scope    <- list(lower = ~ 1, upper = ies_total ~ age + I(age^2) + race + ethnicity + sex +
     noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8)
   res_ours <- ic_step(fit_null, scope = scope, direction = "both",
                       criterion = "AIC", trace = 0)
@@ -126,7 +182,7 @@ test_that("ic_step both AIC matches MASS::stepAIC both on lm", {
 
 test_that("ic_step backward AIC matches MASS::stepAIC backward on glm", {
   d        <- .make_step_data()
-  fit_full <- glm(ptsd ~ age + I(age^2) + race + hispanic + female +
+  fit_full <- glm(death ~ age + I(age^2) + race + ethnicity + sex +
     noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8, data = d, family = binomial)
   suppressWarnings({
     res_ours <- ic_step(fit_full, direction = "backward", criterion = "AIC", trace = 0)
@@ -138,8 +194,8 @@ test_that("ic_step backward AIC matches MASS::stepAIC backward on glm", {
 
 test_that("ic_step forward AIC matches MASS::stepAIC forward on glm", {
   d        <- .make_step_data()
-  fit_null <- glm(ptsd ~ 1, data = d, family = binomial)
-  scope    <- list(lower = ~ 1, upper = ptsd ~ age + I(age^2) + race + hispanic + female +
+  fit_null <- glm(death ~ 1, data = d, family = binomial)
+  scope    <- list(lower = ~ 1, upper = death ~ age + I(age^2) + race + ethnicity + sex +
     noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8)
   suppressWarnings({
     res_ours <- ic_step(fit_null, scope = scope, direction = "forward",
@@ -153,8 +209,8 @@ test_that("ic_step forward AIC matches MASS::stepAIC forward on glm", {
 
 test_that("ic_step both AIC matches MASS::stepAIC both on glm", {
   d        <- .make_step_data()
-  fit_null <- glm(ptsd ~ 1, data = d, family = binomial)
-  scope    <- list(lower = ~ 1, upper = ptsd ~ age + I(age^2) + race + hispanic + female +
+  fit_null <- glm(death ~ 1, data = d, family = binomial)
+  scope    <- list(lower = ~ 1, upper = death ~ age + I(age^2) + race + ethnicity + sex +
     noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8)
   suppressWarnings({
     res_ours <- ic_step(fit_null, scope = scope, direction = "both",
@@ -172,7 +228,7 @@ test_that("ic_step both AIC matches MASS::stepAIC both on glm", {
 
 test_that("ic_step backward BIC matches MASS::stepAIC with k=log(n) on lm", {
   d        <- .make_step_data()
-  fit_full <- lm(ies_total ~ age + I(age^2) + race + hispanic + female +
+  fit_full <- lm(ies_total ~ age + I(age^2) + race + ethnicity + sex +
     noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8, data = d)
   n        <- nobs(fit_full)
   res_ours <- ic_step(fit_full, direction = "backward", criterion = "BIC", trace = 0)
@@ -185,7 +241,7 @@ test_that("ic_step forward BIC matches MASS::stepAIC with k=log(n) on lm", {
   d        <- .make_step_data()
   fit_null <- lm(ies_total ~ 1, data = d)
   n        <- nrow(d)
-  scope    <- list(lower = ~ 1, upper = ies_total ~ age + I(age^2) + race + hispanic + female +
+  scope    <- list(lower = ~ 1, upper = ies_total ~ age + I(age^2) + race + ethnicity + sex +
     noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8)
   res_ours <- ic_step(fit_null, scope = scope, direction = "forward",
                       criterion = "BIC", trace = 0)
@@ -197,10 +253,10 @@ test_that("ic_step forward BIC matches MASS::stepAIC with k=log(n) on lm", {
 
 test_that("ic_step both BIC matches MASS::stepAIC with k=log(n) on lm", {
   d        <- .make_step_data()
-  fit_full <- lm(ies_total ~ age + I(age^2) + race + hispanic + female +
+  fit_full <- lm(ies_total ~ age + I(age^2) + race + ethnicity + sex +
     noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8, data = d)
   n        <- nobs(fit_full)
-  scope    <- list(lower = ~ 1, upper = ies_total ~ age + I(age^2) + race + hispanic + female +
+  scope    <- list(lower = ~ 1, upper = ies_total ~ age + I(age^2) + race + ethnicity + sex +
     noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8)
   res_ours <- ic_step(fit_full, scope = scope, direction = "both",
                       criterion = "BIC", trace = 0)

@@ -6,3 +6,5 @@
 ^pkgdown$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^CLAUDE.md
+^.claude$

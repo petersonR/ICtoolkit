@@ -6,14 +6,17 @@
 \alias{ICtoolkit-package}
 \title{ICtoolkit: Information Criteria for Penalized and Stepwise Model Selection}
 \description{
-ICtoolkit provides a unified interface for computing five information
+ICtoolkit provides a unified interface for computing eight information
 criteria across four model classes:\tabular{lll}{
    Criterion \tab Function \tab Notes \cr
    AIC \tab \code{\link[=compute_aic]{compute_aic()}} \tab Akaike (1974) \cr
    AICc \tab \code{\link[=compute_aicc]{compute_aicc()}} \tab Small-sample correction; Hurvich & Tsai (1989) \cr
    BIC \tab \code{\link[=compute_bic]{compute_bic()}} \tab Schwarz (1978) \cr
+   HQIC \tab \code{\link[=compute_hqic]{compute_hqic()}} \tab Hannan & Quinn (1979) \cr
    EBIC \tab \code{\link[=compute_ebic]{compute_ebic()}} \tab Extended BIC; Chen & Chen (2008) \cr
    RBIC \tab \code{\link[=compute_rbic]{compute_rbic()}} \tab Grouped EBIC for structured predictors \cr
+   mBIC \tab \code{\link[=compute_mbic]{compute_mbic()}} \tab Modified BIC; Bogdan, Ghosh, & Doerge (2004) \cr
+   mBIC2 \tab \code{\link[=compute_mbic2]{compute_mbic2()}} \tab Modified BIC2; Frommlet & Bogdan (2013) \cr
 }
 
 
@@ -26,7 +29,7 @@ fitting.
 }
 
 Stepwise model selection for \code{lm}/\code{glm} objects is available via
-\code{\link[=ic_step]{ic_step()}}, which generalises \code{\link[MASS:stepAIC]{MASS::stepAIC()}} to all five criteria.
+\code{\link[=ic_step]{ic_step()}}, which generalises \code{\link[MASS:stepAIC]{MASS::stepAIC()}} to all eight criteria.
 }
 \section{Getting started}{
 
@@ -63,6 +66,18 @@ selection in small samples. \emph{Biometrika}, \strong{76}(2), 297–307.
 
 Schwarz, G. (1978). Estimating the dimension of a model.
 \emph{The Annals of Statistics}, \strong{6}(2), 461–464.
+
+Hannan, E. J., & Quinn, B. G. (1979). The determination of the order of an
+autoregression. \emph{Journal of the Royal Statistical Society: Series B},
+\strong{41}(2), 190–195.
+
+Bogdan, M., Ghosh, J. K., & Doerge, R. W. (2004). Modifying the Schwarz
+Bayesian information criterion to locate multiple interacting quantitative
+trait loci. \emph{Genetics}, \strong{167}(2), 989–999.
+
+Frommlet, F., & Bogdan, M. (2013). Some optimality properties of FDR
+controlling rules under sparsity. \emph{Electronic Journal of Statistics},
+\strong{7}, 1328–1368.
 }
 \seealso{
 Useful links:

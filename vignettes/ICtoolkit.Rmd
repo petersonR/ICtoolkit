@@ -21,6 +21,7 @@ knitr::opts_chunk$set(
 ```{r load}
 library(ICtoolkit)
 data(covid_eol)
+covid_eol$race <- relevel(covid_eol$race, "White")
 ```
 
 ## Overview
@@ -43,14 +44,14 @@ selection algorithm without any stepwise fitting.
 
 Throughout this vignette we use the `covid_eol` dataset bundled with the
 package — a synthetic dataset modeled after a study of family members of
-ICU patients surveyed for PTSD during the COVID-19 pandemic (n = 279).
+ICU patients surveyed for PTSD during the COVID-19 pandemic (n = 298).
 
 ---
 
 ## 1. Standard criteria for `lm` and `glm`
 
 ```{r lm-example}
-fit <- lm(ies_total ~ age + race + hispanic + female, data = covid_eol)
+fit <- lm(ies_total ~ age + race + ethnicity + sex, data = covid_eol)
 
 compute_aic(fit)
 compute_aicc(fit)
@@ -69,7 +70,7 @@ attr(result, "criterion")   # which IC
 The same functions work for `glm` objects:
 
 ```{r glm-example}
-fit_glm <- glm(ptsd ~ age + race + hispanic + female,
+fit_glm <- glm(death ~ age + race + ethnicity + sex,
                data = covid_eol, family = binomial)
 compute_aic(fit_glm)
 compute_bic(fit_glm)
@@ -129,8 +130,8 @@ by `attr(terms(fit), "term.labels")`.
 ```{r rbic-setup}
 # Two groups: demographic variables and race/ethnicity variables
 P_index <- list(
-  demographic = c("age", "female"),
-  race_eth    = c("race", "hispanic")
+  demographic = c("age", "sex"),
+  race_eth    = c("race", "ethnicity")
 )
 
 result_rbic <- compute_rbic(fit, P_index = P_index)
@@ -151,7 +152,7 @@ For `glmnet` objects, all five criteria return a **vector** of length
 library(glmnet)
 
 # Create a model matrix from the covid_eol predictors
-X <- model.matrix(~ age + race + hispanic + female, data = covid_eol)[, -1]
+X <- model.matrix(~ age + race + ethnicity + sex, data = covid_eol)[, -1]
 y <- covid_eol$ies_total
 p <- ncol(X)
 
@@ -161,9 +162,9 @@ bic_path  <- compute_bic(fit_glmnet)
 ebic_path <- compute_ebic(fit_glmnet, P = p)
 rbic_path <- compute_rbic(fit_glmnet,
                            P_index = list(
-                             demographic = c("age", "femaleYes"),
-                             race_eth    = c("raceBlack", "raceAsian",
-                                             "raceOther", "hispanicYes")))
+                             demographic = c("age", "sexMale"),
+                             race_eth    = c("raceBlack", "raceAAPI/NA/NI",
+                                             "raceOther", "ethnicityNon-Hispanic")))
 
 # Lambda selected by each criterion
 lambda_bic  <- attr(bic_path,  "lambda")[which.min(bic_path)]
@@ -194,7 +195,7 @@ expanded formula and a `P_index` grouped by term type.
 
 ```{r expand-scope}
 # Expand to pairwise interactions + quadratic terms
-es <- expand_scope(ies_total ~ age + race + hispanic + female,
+es <- expand_scope(ies_total ~ age + race + ethnicity + sex,
                    data = covid_eol, k = 2, poly = 2)
 es$formula
 es$P_index

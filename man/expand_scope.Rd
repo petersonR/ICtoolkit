@@ -44,7 +44,7 @@ among the \strong{base} terms only (polynomials do not interact with each other
 or with base terms).
 }
 \examples{
-es <- expand_scope(ies_total ~ age + race + hispanic + female,
+es <- expand_scope(ies_total ~ age + race + ethnicity + sex,
                    data = covid_eol, k = 2, poly = 2)
 es$formula
 es$P_index

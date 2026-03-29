@@ -5,14 +5,34 @@
 \alias{covid_eol}
 \title{Synthetic ICU end-of-life PTSD survey data}
 \format{
-A data frame with 279 rows and 6 variables:
+A data frame with 298 rows and 16 variables:
 \describe{
-\item{ies_total}{Integer. IES-6 total score (1--30).}
-\item{ptsd}{Integer. Binary indicator: 1 if \code{ies_total >= 10}, 0 otherwise.}
+\item{subject_id}{Integer. Unique subject identifier.}
+\item{ies_total}{Integer. IES-6 total score (0--24).}
 \item{age}{Integer. Respondent age in years.}
-\item{race}{Factor with levels \code{White}, \code{Black}, \code{Asian}, \code{Other}.}
-\item{hispanic}{Factor with levels \code{No}, \code{Yes}.}
-\item{female}{Factor with levels \code{No}, \code{Yes}.}
+\item{ethnicity}{Factor with levels \code{Hispanic}, \code{Non-Hispanic}.}
+\item{race}{Factor with levels \code{AAPI/NA/NI}, \code{Black}, \code{Other}, \code{White}.}
+\item{sex}{Factor with levels \code{Female}, \code{Male}.}
+\item{education}{Factor with levels \code{<= High school diploma or GED},
+\code{4-year college degree}, \code{Some college or trade school},
+\code{Some graduate school or graduate degree}.}
+\item{relationship}{Factor with levels \code{Child}, \code{Other},
+\code{Parent}, \code{Sibling}, \code{Spouse/partner}.
+Relationship of the respondent to the ICU patient.}
+\item{resp_failure}{Factor with levels \code{High Flow nasal cannula},
+\code{Invasive MV}, \code{nasal cannula}, \code{Non-invasive MV}.
+Type of respiratory failure treatment.}
+\item{ecmo}{Factor with levels \code{No}, \code{Yes}.
+Whether extracorporeal membrane oxygenation was used.}
+\item{icu_totaldays}{Integer. Total days in the ICU.}
+\item{death}{Logical. Whether the ICU patient died.}
+\item{psych_meds}{Factor with levels \code{No}, \code{Yes}.
+Whether the respondent was taking psychiatric medications.}
+\item{charlson}{Integer. Charlson Comorbidity Index score.}
+\item{sofa}{Integer. Sequential Organ Failure Assessment score (0--20).}
+\item{ICU_admit_month}{Factor with levels \code{April},
+\code{Feburary/March}, \code{May/June/July}.
+Month of ICU admission.}
 }
 }
 \source{

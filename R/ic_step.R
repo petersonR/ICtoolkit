@@ -1,8 +1,8 @@
 #' Stepwise model selection using information criteria
 #'
 #' Performs forward, backward, or bidirectional stepwise model selection for
-#' `lm` and `glm` objects using any of the five information criteria provided
-#' by ICtoolkit: AIC, AICc, BIC, EBIC, or RBIC.
+#' `lm` and `glm` objects using any of the information criteria provided
+#' by ICtoolkit: AIC, AICc, BIC, HQIC, EBIC, RBIC, mBIC, or mBIC2.
 #'
 #' At each step, all single-term additions (forward) and/or deletions
 #' (backward) are evaluated.  The move that gives the greatest IC reduction
@@ -31,15 +31,19 @@
 #' @param scope A formula or list with `lower` and/or `upper` elements
 #'   specifying the model search space.  See [MASS::stepAIC()] for details.
 #' @param direction One of `"both"` (default), `"backward"`, or `"forward"`.
-#' @param criterion One of `"AIC"` (default), `"AICc"`, `"BIC"`, `"EBIC"`,
-#'   or `"RBIC"`.
+#' @param criterion One of `"AIC"` (default), `"AICc"`, `"BIC"`, `"HQIC"`,
+#'   `"EBIC"`, `"RBIC"`, `"mBIC"`, or `"mBIC2"`.
 #' @param P Integer. Total number of candidate predictors.  Required only
 #'   for `criterion = "EBIC"`.
 #' @param P_index Named list of character vectors defining variable groups.
 #'   Required only for `criterion = "RBIC"`.  See Details.
+#' @param kappa Positive numeric scalar controlling the prior expected number
+#'   of true signals.  Used only for `criterion = "mBIC"` or `"mBIC2"`.
+#'   Default `4`.  See [compute_mbic()].
 #' @param gamma Gamma specification passed to [compute_ebic()] or
-#'   [compute_rbic()].  Ignored for AIC / AICc / BIC.  See those functions
-#'   for accepted values (`"ebic"`, `"per_group"`, numeric, or a function).
+#'   [compute_rbic()].  Ignored for AIC / AICc / BIC / HQIC / mBIC / mBIC2.
+#'   See those functions for accepted values (`"ebic"`, `"per_group"`, numeric,
+#'   or a function).
 #' @param trace Integer controlling verbosity.  `0` = silent, `1` = one line
 #'   per accepted step (default), `2` = all candidates at each step.
 #' @param steps Maximum number of steps.  Default is `1000`.
@@ -50,7 +54,8 @@
 #'   value after that step.
 #'
 #' @seealso [compute_aic()], [compute_aicc()], [compute_bic()],
-#'   [compute_ebic()], [compute_rbic()], [MASS::stepAIC()]
+#'   [compute_hqic()], [compute_ebic()], [compute_rbic()],
+#'   [compute_mbic()], [compute_mbic2()], [MASS::stepAIC()]
 #'
 #' @examples
 #' ## Backward BIC selection
@@ -71,9 +76,11 @@
 ic_step <- function(object,
                     scope,
                     direction = c("both", "backward", "forward"),
-                    criterion = c("AIC", "AICc", "BIC", "EBIC", "RBIC"),
+                    criterion = c("AIC", "AICc", "BIC", "HQIC", "EBIC", "RBIC",
+                                  "mBIC", "mBIC2"),
                     P         = NULL,
                     P_index   = NULL,
+                    kappa     = 4,
                     gamma     = "ebic",
                     trace     = 1L,
                     steps     = 1000L) {
@@ -87,6 +94,8 @@ ic_step <- function(object,
     stop("'P' (total candidate predictors) must be supplied for criterion = 'EBIC'.")
   if (criterion == "RBIC" && is.null(P_index))
     stop("'P_index' (named list of variable groups) must be supplied for criterion = 'RBIC'.")
+  if (criterion %in% c("mBIC", "mBIC2") && is.null(P))
+    stop("'P' (total candidate predictors) must be supplied for criterion = '", criterion, "'.")
 
   # ---- parse scope ----------------------------------------------------------
   lower_terms <- character(0)
@@ -106,11 +115,14 @@ ic_step <- function(object,
   # ---- IC evaluation helper -------------------------------------------------
   .ic <- function(fit) {
     as.numeric(switch(criterion,
-      AIC  = compute_aic(fit),
-      AICc = compute_aicc(fit),
-      BIC  = compute_bic(fit),
-      EBIC = compute_ebic(fit, P = P, gamma = gamma),
-      RBIC = compute_rbic(fit, P_index = P_index, gamma = gamma)
+      AIC   = compute_aic(fit),
+      AICc  = compute_aicc(fit),
+      BIC   = compute_bic(fit),
+      HQIC  = compute_hqic(fit),
+      EBIC  = compute_ebic(fit, P = P, gamma = gamma),
+      RBIC  = compute_rbic(fit, P_index = P_index, gamma = gamma),
+      mBIC  = compute_mbic(fit, P = P, kappa = kappa),
+      mBIC2 = compute_mbic2(fit, P = P, kappa = kappa)
     ))
   }
 
