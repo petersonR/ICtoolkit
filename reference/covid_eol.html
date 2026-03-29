@@ -67,23 +67,63 @@ Respondents were assessed for PTSD using the Impact of Events Scale-6
 
     <div id="format">
     <h2>Format</h2>
-    <p>A data frame with 279 rows and 6 variables:</p><dl><dt>ies_total</dt>
-<dd><p>Integer. IES-6 total score (1–30).</p></dd>
+    <p>A data frame with 298 rows and 16 variables:</p><dl><dt>subject_id</dt>
+<dd><p>Integer. Unique subject identifier.</p></dd>
 
-<dt>ptsd</dt>
-<dd><p>Integer. Binary indicator: 1 if <code>ies_total &gt;= 10</code>, 0 otherwise.</p></dd>
+<dt>ies_total</dt>
+<dd><p>Integer. IES-6 total score (0–24).</p></dd>
 
 <dt>age</dt>
 <dd><p>Integer. Respondent age in years.</p></dd>
 
+<dt>ethnicity</dt>
+<dd><p>Factor with levels <code>Hispanic</code>, <code>Non-Hispanic</code>.</p></dd>
+
 <dt>race</dt>
-<dd><p>Factor with levels <code>White</code>, <code>Black</code>, <code>Asian</code>, <code>Other</code>.</p></dd>
+<dd><p>Factor with levels <code>AAPI/NA/NI</code>, <code>Black</code>, <code>Other</code>, <code>White</code>.</p></dd>
 
-<dt>hispanic</dt>
-<dd><p>Factor with levels <code>No</code>, <code>Yes</code>.</p></dd>
+<dt>sex</dt>
+<dd><p>Factor with levels <code>Female</code>, <code>Male</code>.</p></dd>
 
-<dt>female</dt>
-<dd><p>Factor with levels <code>No</code>, <code>Yes</code>.</p></dd>
+<dt>education</dt>
+<dd><p>Factor with levels <code>&lt;= High school diploma or GED</code>,
+<code>4-year college degree</code>, <code>Some college or trade school</code>,
+<code>Some graduate school or graduate degree</code>.</p></dd>
+
+<dt>relationship</dt>
+<dd><p>Factor with levels <code>Child</code>, <code>Other</code>,
+<code>Parent</code>, <code>Sibling</code>, <code>Spouse/partner</code>.
+Relationship of the respondent to the ICU patient.</p></dd>
+
+<dt>resp_failure</dt>
+<dd><p>Factor with levels <code>High Flow nasal cannula</code>,
+<code>Invasive MV</code>, <code>nasal cannula</code>, <code>Non-invasive MV</code>.
+Type of respiratory failure treatment.</p></dd>
+
+<dt>ecmo</dt>
+<dd><p>Factor with levels <code>No</code>, <code>Yes</code>.
+Whether extracorporeal membrane oxygenation was used.</p></dd>
+
+<dt>icu_totaldays</dt>
+<dd><p>Integer. Total days in the ICU.</p></dd>
+
+<dt>death</dt>
+<dd><p>Logical. Whether the ICU patient died.</p></dd>
+
+<dt>psych_meds</dt>
+<dd><p>Factor with levels <code>No</code>, <code>Yes</code>.
+Whether the respondent was taking psychiatric medications.</p></dd>
+
+<dt>charlson</dt>
+<dd><p>Integer. Charlson Comorbidity Index score.</p></dd>
+
+<dt>sofa</dt>
+<dd><p>Integer. Sequential Organ Failure Assessment score (0–20).</p></dd>
+
+<dt>ICU_admit_month</dt>
+<dd><p>Factor with levels <code>April</code>,
+<code>Feburary/March</code>, <code>May/June/July</code>.
+Month of ICU admission.</p></dd>
 
 
 </dl></div>

@@ -118,23 +118,22 @@ or with base terms).</p>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">es</span> <span class="op">&lt;-</span> <span class="fu">expand_scope</span><span class="op">(</span><span class="va">ies_total</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">hispanic</span> <span class="op">+</span> <span class="va">female</span>,</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">es</span> <span class="op">&lt;-</span> <span class="fu">expand_scope</span><span class="op">(</span><span class="va">ies_total</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">ethnicity</span> <span class="op">+</span> <span class="va">sex</span>,</span></span>
 <span class="r-in"><span>                   data <span class="op">=</span> <span class="va">covid_eol</span>, k <span class="op">=</span> <span class="fl">2</span>, poly <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">es</span><span class="op">$</span><span class="va">formula</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ies_total ~ age + race + hispanic + female + I(age^2) + age:race + </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     age:hispanic + age:female + race:hispanic + race:female + </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     hispanic:female</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5575da610f20&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ies_total ~ age + race + ethnicity + sex + I(age^2) + age:race + </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     age:ethnicity + age:sex + race:ethnicity + race:sex + ethnicity:sex</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x564b3743afd8&gt;</span>
 <span class="r-in"><span><span class="va">es</span><span class="op">$</span><span class="va">P_index</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $main</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "age"      "race"     "hispanic" "female"  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "age"       "race"      "ethnicity" "sex"      </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $poly_2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "I(age^2)"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $interact_2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "age:race"        "age:hispanic"    "age:female"      "race:hispanic"  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "race:female"     "hispanic:female"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "age:race"       "age:ethnicity"  "age:sex"        "race:ethnicity"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "race:sex"       "ethnicity:sex" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Use directly with ic_step</span></span></span>
@@ -144,13 +143,15 @@ or with base terms).</p>
 <span class="r-in"><span>        P_index <span class="op">=</span> <span class="va">es</span><span class="op">$</span><span class="va">P_index</span>, trace <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Call:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> lm(formula = ies_total ~ hispanic:female, data = covid_eol)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> lm(formula = ies_total ~ ethnicity:sex, data = covid_eol)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Coefficients:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           (Intercept)    hispanicNo:femaleNo   hispanicYes:femaleNo  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                15.299                 -5.338                 -4.539  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  hispanicNo:femaleYes  hispanicYes:femaleYes  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                -3.132                     NA  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                     (Intercept)      ethnicityHispanic:sexFemale  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                           8.948                            6.415  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ethnicityNon-Hispanic:sexFemale        ethnicityHispanic:sexMale  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                           2.926                            2.704  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ethnicityNon-Hispanic:sexMale  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                              NA  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

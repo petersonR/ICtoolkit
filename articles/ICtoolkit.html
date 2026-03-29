@@ -80,7 +80,8 @@
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/petersonR/ICtoolkit" class="external-link">ICtoolkit</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">covid_eol</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">covid_eol</span><span class="op">)</span></span>
+<span><span class="va">covid_eol</span><span class="op">$</span><span class="va">race</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/relevel.html" class="external-link">relevel</a></span><span class="op">(</span><span class="va">covid_eol</span><span class="op">$</span><span class="va">race</span>, <span class="st">"White"</span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
@@ -129,17 +130,17 @@ without any stepwise fitting.</p>
 <p>Throughout this vignette we use the <code>covid_eol</code> dataset
 bundled with the package — a synthetic dataset modeled after a study of
 family members of ICU patients surveyed for PTSD during the COVID-19
-pandemic (n = 279).</p>
+pandemic (n = 298).</p>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="standard-criteria-for-lm-and-glm">1. Standard criteria for <code>lm</code> and <code>glm</code><a class="anchor" aria-label="anchor" href="#standard-criteria-for-lm-and-glm"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">ies_total</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">hispanic</span> <span class="op">+</span> <span class="va">female</span>, data <span class="op">=</span> <span class="va">covid_eol</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">ies_total</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">ethnicity</span> <span class="op">+</span> <span class="va">sex</span>, data <span class="op">=</span> <span class="va">covid_eol</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/compute_aic.html">compute_aic</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1777.453</span></span>
+<span><span class="co">#&gt; [1] 1895.45</span></span>
 <span><span class="co">#&gt; attr(,"fit_class")</span></span>
 <span><span class="co">#&gt; [1] "lm"</span></span>
 <span><span class="co">#&gt; attr(,"k")</span></span>
@@ -147,7 +148,7 @@ pandemic (n = 279).</p>
 <span><span class="co">#&gt; attr(,"criterion")</span></span>
 <span><span class="co">#&gt; [1] "AIC"</span></span>
 <span><span class="fu"><a href="../reference/compute_aicc.html">compute_aicc</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1777.866</span></span>
+<span><span class="co">#&gt; [1] 1895.836</span></span>
 <span><span class="co">#&gt; attr(,"fit_class")</span></span>
 <span><span class="co">#&gt; [1] "lm"</span></span>
 <span><span class="co">#&gt; attr(,"k")</span></span>
@@ -155,7 +156,7 @@ pandemic (n = 279).</p>
 <span><span class="co">#&gt; attr(,"criterion")</span></span>
 <span><span class="co">#&gt; [1] "AICc"</span></span>
 <span><span class="fu"><a href="../reference/compute_bic.html">compute_bic</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1806.503</span></span>
+<span><span class="co">#&gt; [1] 1925.027</span></span>
 <span><span class="co">#&gt; attr(,"fit_class")</span></span>
 <span><span class="co">#&gt; [1] "lm"</span></span>
 <span><span class="co">#&gt; attr(,"k")</span></span>
@@ -173,10 +174,10 @@ pandemic (n = 279).</p>
 <span><span class="co">#&gt; [1] "BIC"</span></span></code></pre></div>
 <p>The same functions work for <code>glm</code> objects:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit_glm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">ptsd</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">hispanic</span> <span class="op">+</span> <span class="va">female</span>,</span>
+<code class="sourceCode R"><span><span class="va">fit_glm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">death</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">ethnicity</span> <span class="op">+</span> <span class="va">sex</span>,</span>
 <span>               data <span class="op">=</span> <span class="va">covid_eol</span>, family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/compute_aic.html">compute_aic</a></span><span class="op">(</span><span class="va">fit_glm</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 354.6416</span></span>
+<span><span class="co">#&gt; [1] 407.5893</span></span>
 <span><span class="co">#&gt; attr(,"fit_class")</span></span>
 <span><span class="co">#&gt; [1] "glm"</span></span>
 <span><span class="co">#&gt; attr(,"k")</span></span>
@@ -184,7 +185,7 @@ pandemic (n = 279).</p>
 <span><span class="co">#&gt; attr(,"criterion")</span></span>
 <span><span class="co">#&gt; [1] "AIC"</span></span>
 <span><span class="fu"><a href="../reference/compute_bic.html">compute_bic</a></span><span class="op">(</span><span class="va">fit_glm</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 380.0601</span></span>
+<span><span class="co">#&gt; [1] 433.4689</span></span>
 <span><span class="co">#&gt; attr(,"fit_class")</span></span>
 <span><span class="co">#&gt; [1] "glm"</span></span>
 <span><span class="co">#&gt; attr(,"k")</span></span>
@@ -210,7 +211,7 @@ follows Chen &amp; Chen (2008):</p>
 <code class="sourceCode R"><span><span class="co"># P = 10 candidate predictors (total, excluding intercept)</span></span>
 <span><span class="va">result_ebic</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_ebic.html">compute_ebic</a></span><span class="op">(</span><span class="va">fit</span>, P <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="va">result_ebic</span></span>
-<span><span class="co">#&gt; [1] 1806.503</span></span>
+<span><span class="co">#&gt; [1] 1925.027</span></span>
 <span><span class="co">#&gt; attr(,"fit_class")</span></span>
 <span><span class="co">#&gt; [1] "lm"</span></span>
 <span><span class="co">#&gt; attr(,"k")</span></span>
@@ -230,7 +231,7 @@ follows Chen &amp; Chen (2008):</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Fixed gamma = 0.5</span></span>
 <span><span class="fu"><a href="../reference/compute_ebic.html">compute_ebic</a></span><span class="op">(</span><span class="va">fit</span>, P <span class="op">=</span> <span class="fl">10</span>, gamma <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 1811.85</span></span>
+<span><span class="co">#&gt; [1] 1930.374</span></span>
 <span><span class="co">#&gt; attr(,"fit_class")</span></span>
 <span><span class="co">#&gt; [1] "lm"</span></span>
 <span><span class="co">#&gt; attr(,"k")</span></span>
@@ -264,13 +265,13 @@ character vector of <strong>term labels</strong> exactly as returned by
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Two groups: demographic variables and race/ethnicity variables</span></span>
 <span><span class="va">P_index</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  demographic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"female"</span><span class="op">)</span>,</span>
-<span>  race_eth    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"race"</span>, <span class="st">"hispanic"</span><span class="op">)</span></span>
+<span>  demographic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"sex"</span><span class="op">)</span>,</span>
+<span>  race_eth    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"race"</span>, <span class="st">"ethnicity"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">result_rbic</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_rbic.html">compute_rbic</a></span><span class="op">(</span><span class="va">fit</span>, P_index <span class="op">=</span> <span class="va">P_index</span><span class="op">)</span></span>
 <span><span class="va">result_rbic</span></span>
-<span><span class="co">#&gt; [1] 1806.503</span></span>
+<span><span class="co">#&gt; [1] 1925.027</span></span>
 <span><span class="co">#&gt; attr(,"fit_class")</span></span>
 <span><span class="co">#&gt; [1] "lm"</span></span>
 <span><span class="co">#&gt; attr(,"k")</span></span>
@@ -281,10 +282,10 @@ character vector of <strong>term labels</strong> exactly as returned by
 <span><span class="co">#&gt; [1] 0</span></span>
 <span><span class="co">#&gt; attr(,"P_index")</span></span>
 <span><span class="co">#&gt; attr(,"P_index")$demographic</span></span>
-<span><span class="co">#&gt; [1] "age"    "female"</span></span>
+<span><span class="co">#&gt; [1] "age" "sex"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; attr(,"P_index")$race_eth</span></span>
-<span><span class="co">#&gt; [1] "race"     "hispanic"</span></span>
+<span><span class="co">#&gt; [1] "race"      "ethnicity"</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">result_rbic</span>, <span class="st">"gamma"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 0</span></span></code></pre></div>
@@ -303,7 +304,7 @@ that minimises the criterion.</p>
 <span><span class="co">#&gt; Loaded glmnet 4.1-10</span></span>
 <span></span>
 <span><span class="co"># Create a model matrix from the covid_eol predictors</span></span>
-<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">hispanic</span> <span class="op">+</span> <span class="va">female</span>, data <span class="op">=</span> <span class="va">covid_eol</span><span class="op">)</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span></span>
+<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">ethnicity</span> <span class="op">+</span> <span class="va">sex</span>, data <span class="op">=</span> <span class="va">covid_eol</span><span class="op">)</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span></span>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">covid_eol</span><span class="op">$</span><span class="va">ies_total</span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
 <span></span>
@@ -313,9 +314,9 @@ that minimises the criterion.</p>
 <span><span class="va">ebic_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_ebic.html">compute_ebic</a></span><span class="op">(</span><span class="va">fit_glmnet</span>, P <span class="op">=</span> <span class="va">p</span><span class="op">)</span></span>
 <span><span class="va">rbic_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_rbic.html">compute_rbic</a></span><span class="op">(</span><span class="va">fit_glmnet</span>,</span>
 <span>                           P_index <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>                             demographic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"femaleYes"</span><span class="op">)</span>,</span>
-<span>                             race_eth    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"raceBlack"</span>, <span class="st">"raceAsian"</span>,</span>
-<span>                                             <span class="st">"raceOther"</span>, <span class="st">"hispanicYes"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>                             demographic <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"sexMale"</span><span class="op">)</span>,</span>
+<span>                             race_eth    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"raceBlack"</span>, <span class="st">"raceAAPI/NA/NI"</span>,</span>
+<span>                                             <span class="st">"raceOther"</span>, <span class="st">"ethnicityNon-Hispanic"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Lambda selected by each criterion</span></span>
 <span><span class="va">lambda_bic</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">bic_path</span>,  <span class="st">"lambda"</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.min</a></span><span class="op">(</span><span class="va">bic_path</span><span class="op">)</span><span class="op">]</span></span>
@@ -323,23 +324,23 @@ that minimises the criterion.</p>
 <span><span class="va">lambda_rbic</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">rbic_path</span>, <span class="st">"lambda"</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/which.min.html" class="external-link">which.min</a></span><span class="op">(</span><span class="va">rbic_path</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"BIC-selected lambda: "</span>,  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">lambda_bic</span>,  <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; BIC-selected lambda:  0.2612</span></span>
+<span><span class="co">#&gt; BIC-selected lambda:  0.4564</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"EBIC-selected lambda:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">lambda_ebic</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; EBIC-selected lambda: 0.2612</span></span>
+<span><span class="co">#&gt; EBIC-selected lambda: 0.4564</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"RBIC-selected lambda:"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">lambda_rbic</span>, <span class="fl">4</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; RBIC-selected lambda: 0.2612</span></span>
+<span><span class="co">#&gt; RBIC-selected lambda: 0.4564</span></span>
 <span></span>
 <span><span class="co"># Coefficients at BIC-optimal lambda</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_glmnet</span>, s <span class="op">=</span> <span class="va">lambda_bic</span><span class="op">)</span></span>
 <span><span class="co">#&gt; 7 x 1 sparse Matrix of class "dgCMatrix"</span></span>
-<span><span class="co">#&gt;             s=0.2611923</span></span>
-<span><span class="co">#&gt; (Intercept)    9.990131</span></span>
-<span><span class="co">#&gt; age            .       </span></span>
-<span><span class="co">#&gt; raceBlack      .       </span></span>
-<span><span class="co">#&gt; raceAsian      .       </span></span>
-<span><span class="co">#&gt; raceOther      .       </span></span>
-<span><span class="co">#&gt; hispanicYes    2.007704</span></span>
-<span><span class="co">#&gt; femaleYes      2.443190</span></span></code></pre></div>
+<span><span class="co">#&gt;                       s=0.4563982</span></span>
+<span><span class="co">#&gt; (Intercept)             14.259953</span></span>
+<span><span class="co">#&gt; age                      .       </span></span>
+<span><span class="co">#&gt; raceAAPI/NA/NI           .       </span></span>
+<span><span class="co">#&gt; raceBlack                .       </span></span>
+<span><span class="co">#&gt; raceOther                .       </span></span>
+<span><span class="co">#&gt; ethnicityNon-Hispanic   -2.304095</span></span>
+<span><span class="co">#&gt; sexMale                 -2.147040</span></span></code></pre></div>
 <blockquote>
 <p><strong>Note on alpha &lt; 1:</strong> When a <code>glmnet</code>
 model is fit with <code>alpha &lt; 1</code> (elastic-net or ridge), the
@@ -359,23 +360,22 @@ given a base formula, it generates the expanded formula and a
 <code>P_index</code> grouped by term type.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Expand to pairwise interactions + quadratic terms</span></span>
-<span><span class="va">es</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/expand_scope.html">expand_scope</a></span><span class="op">(</span><span class="va">ies_total</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">hispanic</span> <span class="op">+</span> <span class="va">female</span>,</span>
+<span><span class="va">es</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/expand_scope.html">expand_scope</a></span><span class="op">(</span><span class="va">ies_total</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">ethnicity</span> <span class="op">+</span> <span class="va">sex</span>,</span>
 <span>                   data <span class="op">=</span> <span class="va">covid_eol</span>, k <span class="op">=</span> <span class="fl">2</span>, poly <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">es</span><span class="op">$</span><span class="va">formula</span></span>
-<span><span class="co">#&gt; ies_total ~ age + race + hispanic + female + I(age^2) + age:race + </span></span>
-<span><span class="co">#&gt;     age:hispanic + age:female + race:hispanic + race:female + </span></span>
-<span><span class="co">#&gt;     hispanic:female</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x55a246417ab8&gt;</span></span>
+<span><span class="co">#&gt; ies_total ~ age + race + ethnicity + sex + I(age^2) + age:race + </span></span>
+<span><span class="co">#&gt;     age:ethnicity + age:sex + race:ethnicity + race:sex + ethnicity:sex</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x564bbf77acf0&gt;</span></span>
 <span><span class="va">es</span><span class="op">$</span><span class="va">P_index</span></span>
 <span><span class="co">#&gt; $main</span></span>
-<span><span class="co">#&gt; [1] "age"      "race"     "hispanic" "female"  </span></span>
+<span><span class="co">#&gt; [1] "age"       "race"      "ethnicity" "sex"      </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $poly_2</span></span>
 <span><span class="co">#&gt; [1] "I(age^2)"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $interact_2</span></span>
-<span><span class="co">#&gt; [1] "age:race"        "age:hispanic"    "age:female"      "race:hispanic"  </span></span>
-<span><span class="co">#&gt; [5] "race:female"     "hispanic:female"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "age:race"       "age:ethnicity"  "age:sex"        "race:ethnicity"</span></span>
+<span><span class="co">#&gt; [5] "race:sex"       "ethnicity:sex"</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -396,11 +396,11 @@ through interactions straightforward.</p>
 <span>  criterion <span class="op">=</span> <span class="st">"BIC"</span>,</span>
 <span>  trace     <span class="op">=</span> <span class="fl">1</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Start:  BIC = 1803.1581</span></span>
-<span><span class="co">#&gt; Step  1: + hispanic:female                   BIC = 1790.1605</span></span>
+<span><span class="co">#&gt; Start:  BIC = 1935.9572</span></span>
+<span><span class="co">#&gt; Step  1: + ethnicity:sex                     BIC = 1916.3122</span></span>
 <span><span class="co">#&gt; No improvement at step 2. Stopping.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/formula.html" class="external-link">formula</a></span><span class="op">(</span><span class="va">selected</span><span class="op">)</span></span>
-<span><span class="co">#&gt; ies_total ~ hispanic:female</span></span></code></pre></div>
+<span><span class="co">#&gt; ies_total ~ ethnicity:sex</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="inspecting-the-selection-path">Inspecting the selection path<a class="anchor" aria-label="anchor" href="#inspecting-the-selection-path"></a>
 </h3>
@@ -408,9 +408,9 @@ through interactions straightforward.</p>
 to the returned model:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">selected</span>, <span class="st">"step_path"</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   step            action      BIC</span></span>
-<span><span class="co">#&gt; 1    0           &lt;start&gt; 1803.158</span></span>
-<span><span class="co">#&gt; 2    1 + hispanic:female 1790.161</span></span></code></pre></div>
+<span><span class="co">#&gt;   step          action      BIC</span></span>
+<span><span class="co">#&gt; 1    0         &lt;start&gt; 1935.957</span></span>
+<span><span class="co">#&gt; 2    1 + ethnicity:sex 1916.312</span></span></code></pre></div>
 <hr>
 </div>
 </div>
