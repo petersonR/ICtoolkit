@@ -308,7 +308,7 @@ that minimises the criterion.</p>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">covid_eol</span><span class="op">$</span><span class="va">ies_total</span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fit_glmnet</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://glmnet.stanford.edu/reference/glmnet.html" class="external-link">glmnet</a></span><span class="op">(</span><span class="va">X</span>, <span class="va">y</span>, family <span class="op">=</span> <span class="st">"gaussian"</span><span class="op">)</span></span>
+<span><span class="va">fit_glmnet</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/glmnet/man/glmnet.html" class="external-link">glmnet</a></span><span class="op">(</span><span class="va">X</span>, <span class="va">y</span>, family <span class="op">=</span> <span class="st">"gaussian"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">bic_path</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_bic.html">compute_bic</a></span><span class="op">(</span><span class="va">fit_glmnet</span><span class="op">)</span></span>
 <span><span class="va">ebic_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_ebic.html">compute_ebic</a></span><span class="op">(</span><span class="va">fit_glmnet</span>, P <span class="op">=</span> <span class="va">p</span><span class="op">)</span></span>
@@ -365,7 +365,7 @@ given a base formula, it generates the expanded formula and a
 <span><span class="va">es</span><span class="op">$</span><span class="va">formula</span></span>
 <span><span class="co">#&gt; ies_total ~ age + race + ethnicity + sex + I(age^2) + age:race + </span></span>
 <span><span class="co">#&gt;     age:ethnicity + age:sex + race:ethnicity + race:sex + ethnicity:sex</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x564bbf77acf0&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x55f0c22bcf90&gt;</span></span>
 <span><span class="va">es</span><span class="op">$</span><span class="va">P_index</span></span>
 <span><span class="co">#&gt; $main</span></span>
 <span><span class="co">#&gt; [1] "age"       "race"      "ethnicity" "sex"      </span></span>
