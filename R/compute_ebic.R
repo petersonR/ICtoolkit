@@ -153,6 +153,7 @@ compute_ebic.coxph <- function(fit, P = NULL, gamma = "ebic", ...) {
 
 #' @export
 compute_ebic.ncvsurv <- function(fit, P = NULL, gamma = "ebic", ...) {
+  .check_ncvreg_ns()
   if (is.null(P)) P <- nrow(fit$beta)
   gammafn <- .resolve_gammafn(gamma)
 

@@ -84,6 +84,7 @@ compute_aicc.coxph <- function(fit, ...) {
 
 #' @export
 compute_aicc.ncvsurv <- function(fit, ...) {
+  .check_ncvreg_ns()
   n   <- .extract_n_ncvsurv(fit)
   k   <- .extract_k_ncvsurv(fit)
   val <- stats::AIC(fit) + .aicc_correction(k, n)

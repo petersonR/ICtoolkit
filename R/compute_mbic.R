@@ -131,6 +131,7 @@ compute_mbic.coxph <- function(fit, P = NULL, kappa = 4, ...) {
 
 #' @export
 compute_mbic.ncvsurv <- function(fit, P = NULL, kappa = 4, ...) {
+  .check_ncvreg_ns()
   if (is.null(P)) P <- nrow(fit$beta)
   .check_kappa(P, kappa)
 

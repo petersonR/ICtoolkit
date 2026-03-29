@@ -81,6 +81,7 @@ compute_aic.coxph <- function(fit, ...) {
 
 #' @export
 compute_aic.ncvsurv <- function(fit, ...) {
+  .check_ncvreg_ns()
   val <- stats::AIC(fit)   # relies on logLik.ncvsurv
   k   <- .extract_k_ncvsurv(fit)
   .ic_structure(val,

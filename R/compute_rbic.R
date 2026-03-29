@@ -248,6 +248,7 @@ compute_rbic.coxph <- function(fit, P_index, gamma = "ebic", ...) {
 
 #' @export
 compute_rbic.ncvsurv <- function(fit, P_index, gamma = "ebic", ...) {
+  .check_ncvreg_ns()
   .check_P_index(P_index)
   gammafn <- .resolve_gammafn(gamma)
 

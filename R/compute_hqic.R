@@ -91,6 +91,7 @@ compute_hqic.coxph <- function(fit, ...) {
 
 #' @export
 compute_hqic.ncvsurv <- function(fit, ...) {
+  .check_ncvreg_ns()
   n      <- .extract_n_ncvsurv(fit)
   k      <- .extract_k_ncvsurv(fit)
   loglik <- as.numeric(stats::logLik(fit))

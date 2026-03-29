@@ -79,6 +79,7 @@ compute_bic.coxph <- function(fit, ...) {
 
 #' @export
 compute_bic.ncvsurv <- function(fit, ...) {
+  .check_ncvreg_ns()
   val <- stats::BIC(fit)   # relies on logLik.ncvsurv
   k   <- .extract_k_ncvsurv(fit)
   .ic_structure(val,

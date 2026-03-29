@@ -88,6 +88,14 @@
   colSums(fit$beta != 0)
 }
 
+# Ensure ncvreg namespace is loaded (required for logLik.ncvsurv / AIC / BIC).
+# Saved ncvsurv objects loaded from .RData files may not have the ncvreg
+# namespace available, causing stats::BIC() and stats::logLik() to fail.
+.check_ncvreg_ns <- function() {
+  if (!requireNamespace("ncvreg", quietly = TRUE))
+    stop("Package 'ncvreg' is required for ncvsurv methods.", call. = FALSE)
+}
+
 # ---------------------------------------------------------------------------
 # coxph helpers
 # ---------------------------------------------------------------------------
