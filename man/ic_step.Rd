@@ -18,7 +18,9 @@ ic_step(
 )
 }
 \arguments{
-\item{object}{A fitted \code{lm} or \code{glm} object (the starting model).}
+\item{object}{A fitted \code{lm}, \code{glm}, or \code{coxph} object (the starting model).
+For \code{coxph}, the response should be a \code{Surv()} object; a null Cox model
+can be specified as \code{coxph(Surv(time, status) ~ 1, data = ...)}.}
 
 \item{scope}{A formula or list with \code{lower} and/or \code{upper} elements
 specifying the model search space.  See \code{\link[MASS:stepAIC]{MASS::stepAIC()}} for details.}
@@ -56,8 +58,8 @@ value after that step.
 }
 \description{
 Performs forward, backward, or bidirectional stepwise model selection for
-\code{lm} and \code{glm} objects using any of the information criteria provided
-by ICtoolkit: AIC, AICc, BIC, HQIC, EBIC, RBIC, mBIC, or mBIC2.
+\code{lm}, \code{glm}, and \code{coxph} objects using any of the information criteria
+provided by ICtoolkit: AIC, AICc, BIC, HQIC, EBIC, RBIC, mBIC, or mBIC2.
 }
 \details{
 At each step, all single-term additions (forward) and/or deletions
@@ -103,6 +105,17 @@ ic_step(fit_null,
         direction = "forward",
         criterion = "EBIC",
         P         = ncol(mtcars) - 1L)
+
+## Forward BIC selection for Cox models
+\dontrun{
+library(survival)
+fit0 <- coxph(Surv(time, status) ~ 1, data = lung)
+scope_upper <- Surv(time, status) ~ age + sex + ph.ecog + wt.loss
+ic_step(fit0,
+        scope     = list(lower = ~ 1, upper = scope_upper),
+        direction = "forward",
+        criterion = "BIC")
+}
 
 }
 \seealso{

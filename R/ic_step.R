@@ -1,8 +1,8 @@
 #' Stepwise model selection using information criteria
 #'
 #' Performs forward, backward, or bidirectional stepwise model selection for
-#' `lm` and `glm` objects using any of the information criteria provided
-#' by ICtoolkit: AIC, AICc, BIC, HQIC, EBIC, RBIC, mBIC, or mBIC2.
+#' `lm`, `glm`, and `coxph` objects using any of the information criteria
+#' provided by ICtoolkit: AIC, AICc, BIC, HQIC, EBIC, RBIC, mBIC, or mBIC2.
 #'
 #' At each step, all single-term additions (forward) and/or deletions
 #' (backward) are evaluated.  The move that gives the greatest IC reduction
@@ -27,7 +27,9 @@
 #' `P_index` receive no additional RBIC penalty (their BIC contribution still
 #' applies).
 #'
-#' @param object A fitted `lm` or `glm` object (the starting model).
+#' @param object A fitted `lm`, `glm`, or `coxph` object (the starting model).
+#'   For `coxph`, the response should be a `Surv()` object; a null Cox model
+#'   can be specified as `coxph(Surv(time, status) ~ 1, data = ...)`.
 #' @param scope A formula or list with `lower` and/or `upper` elements
 #'   specifying the model search space.  See [MASS::stepAIC()] for details.
 #' @param direction One of `"both"` (default), `"backward"`, or `"forward"`.
@@ -70,6 +72,17 @@
 #'         direction = "forward",
 #'         criterion = "EBIC",
 #'         P         = ncol(mtcars) - 1L)
+#'
+#' ## Forward BIC selection for Cox models
+#' \dontrun{
+#' library(survival)
+#' fit0 <- coxph(Surv(time, status) ~ 1, data = lung)
+#' scope_upper <- Surv(time, status) ~ age + sex + ph.ecog + wt.loss
+#' ic_step(fit0,
+#'         scope     = list(lower = ~ 1, upper = scope_upper),
+#'         direction = "forward",
+#'         criterion = "BIC")
+#' }
 #'
 #' @importFrom stats update
 #' @export

@@ -69,3 +69,20 @@ compute_bic.ncvreg <- function(fit, ...) {
     extras = list(lambda = fit$lambda)
   )
 }
+
+#' @export
+compute_bic.coxph <- function(fit, ...) {
+  val <- stats::BIC(fit)
+  k   <- .extract_k_coxph(fit)
+  .ic_structure(val, fit_class = "coxph", k = k, criterion = "BIC")
+}
+
+#' @export
+compute_bic.ncvsurv <- function(fit, ...) {
+  val <- stats::BIC(fit)   # relies on logLik.ncvsurv
+  k   <- .extract_k_ncvsurv(fit)
+  .ic_structure(val,
+    fit_class = "ncvsurv", k = k, criterion = "BIC",
+    extras = list(lambda = fit$lambda)
+  )
+}

@@ -72,6 +72,32 @@
 }
 
 # ---------------------------------------------------------------------------
+# ncvsurv helpers
+# ---------------------------------------------------------------------------
+
+# Sample size for ncvsurv objects.
+# fit$y is a Surv object (matrix-like), so length(fit$y) gives 2*n.
+.extract_n_ncvsurv <- function(fit) {
+  as.integer(fit$n)
+}
+
+# Number of nonzero coefficients at each lambda.
+# ncvsurv$beta is p x nlambda with NO intercept row (Cox models have no
+# intercept).
+.extract_k_ncvsurv <- function(fit) {
+  colSums(fit$beta != 0)
+}
+
+# ---------------------------------------------------------------------------
+# coxph helpers
+# ---------------------------------------------------------------------------
+
+# Number of estimated parameters for a coxph object (no intercept).
+.extract_k_coxph <- function(fit) {
+  length(stats::coef(fit))
+}
+
+# ---------------------------------------------------------------------------
 # Shared penalty helpers
 # ---------------------------------------------------------------------------
 

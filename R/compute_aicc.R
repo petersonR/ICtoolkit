@@ -73,3 +73,22 @@ compute_aicc.ncvreg <- function(fit, ...) {
     extras = list(lambda = fit$lambda)
   )
 }
+
+#' @export
+compute_aicc.coxph <- function(fit, ...) {
+  n   <- fit$n
+  k   <- .extract_k_coxph(fit)
+  val <- stats::AIC(fit) + .aicc_correction(k, n)
+  .ic_structure(val, fit_class = "coxph", k = k, criterion = "AICc")
+}
+
+#' @export
+compute_aicc.ncvsurv <- function(fit, ...) {
+  n   <- .extract_n_ncvsurv(fit)
+  k   <- .extract_k_ncvsurv(fit)
+  val <- stats::AIC(fit) + .aicc_correction(k, n)
+  .ic_structure(val,
+    fit_class = "ncvsurv", k = k, criterion = "AICc",
+    extras = list(lambda = fit$lambda)
+  )
+}

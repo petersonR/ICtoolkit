@@ -112,3 +112,35 @@ compute_mbic.ncvreg <- function(fit, P = NULL, kappa = 4, ...) {
     extras = list(P = P, kappa = kappa, lambda = fit$lambda)
   )
 }
+
+#' @export
+compute_mbic.coxph <- function(fit, P = NULL, kappa = 4, ...) {
+  k_total <- .extract_k_coxph(fit)
+  if (is.null(P)) P <- k_total
+  .check_kappa(P, kappa)
+
+  bic    <- stats::BIC(fit)
+  k_pred <- k_total
+  val    <- bic + .mbic_penalty(k_pred, P, kappa)
+
+  .ic_structure(val,
+    fit_class = "coxph", k = k_total, criterion = "mBIC",
+    extras = list(P = P, kappa = kappa)
+  )
+}
+
+#' @export
+compute_mbic.ncvsurv <- function(fit, P = NULL, kappa = 4, ...) {
+  if (is.null(P)) P <- nrow(fit$beta)
+  .check_kappa(P, kappa)
+
+  bic     <- as.numeric(compute_bic(fit))
+  k_pred  <- .extract_k_ncvsurv(fit)
+  penalty <- .mbic_penalty(k_pred, P, kappa)
+  val     <- bic + penalty
+
+  .ic_structure(val,
+    fit_class = "ncvsurv", k = k_pred, criterion = "mBIC",
+    extras = list(P = P, kappa = kappa, lambda = fit$lambda)
+  )
+}

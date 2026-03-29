@@ -78,3 +78,25 @@ compute_hqic.ncvreg <- function(fit, ...) {
     extras = list(lambda = fit$lambda)
   )
 }
+
+#' @export
+compute_hqic.coxph <- function(fit, ...) {
+  n   <- fit$n
+  k   <- .extract_k_coxph(fit)
+  ll  <- stats::logLik(fit)
+  df  <- attr(ll, "df")
+  val <- -2 * as.numeric(ll) + 2 * df * log(log(n))
+  .ic_structure(val, fit_class = "coxph", k = k, criterion = "HQIC")
+}
+
+#' @export
+compute_hqic.ncvsurv <- function(fit, ...) {
+  n      <- .extract_n_ncvsurv(fit)
+  k      <- .extract_k_ncvsurv(fit)
+  loglik <- as.numeric(stats::logLik(fit))
+  val    <- -2 * loglik + 2 * k * log(log(n))
+  .ic_structure(val,
+    fit_class = "ncvsurv", k = k, criterion = "HQIC",
+    extras = list(lambda = fit$lambda)
+  )
+}

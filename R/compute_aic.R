@@ -71,3 +71,20 @@ compute_aic.ncvreg <- function(fit, ...) {
     extras = list(lambda = fit$lambda)
   )
 }
+
+#' @export
+compute_aic.coxph <- function(fit, ...) {
+  val <- stats::AIC(fit)
+  k   <- .extract_k_coxph(fit)
+  .ic_structure(val, fit_class = "coxph", k = k, criterion = "AIC")
+}
+
+#' @export
+compute_aic.ncvsurv <- function(fit, ...) {
+  val <- stats::AIC(fit)   # relies on logLik.ncvsurv
+  k   <- .extract_k_ncvsurv(fit)
+  .ic_structure(val,
+    fit_class = "ncvsurv", k = k, criterion = "AIC",
+    extras = list(lambda = fit$lambda)
+  )
+}

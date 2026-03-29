@@ -130,3 +130,42 @@ compute_ebic.ncvreg <- function(fit, P = NULL, gamma = "ebic", ...) {
     extras = list(gamma = gvals, P = P, lambda = fit$lambda)
   )
 }
+
+#' @export
+compute_ebic.coxph <- function(fit, P = NULL, gamma = "ebic", ...) {
+  k_total <- .extract_k_coxph(fit)
+  if (is.null(P)) P <- k_total
+  gammafn <- .resolve_gammafn(gamma)
+
+  n      <- fit$n
+  bic    <- stats::BIC(fit)
+  k_pred <- k_total
+
+  gval    <- gammafn(P, k_pred, n)
+  penalty <- 2 * gval * .log_choose(P, k_pred)
+  val     <- bic + penalty
+
+  .ic_structure(val,
+    fit_class = "coxph", k = k_total, criterion = "EBIC",
+    extras = list(gamma = gval, P = P)
+  )
+}
+
+#' @export
+compute_ebic.ncvsurv <- function(fit, P = NULL, gamma = "ebic", ...) {
+  if (is.null(P)) P <- nrow(fit$beta)
+  gammafn <- .resolve_gammafn(gamma)
+
+  n       <- .extract_n_ncvsurv(fit)
+  bic     <- as.numeric(compute_bic(fit))
+  k_pred  <- .extract_k_ncvsurv(fit)
+
+  gvals   <- vapply(k_pred, function(ki) gammafn(P, ki, n), numeric(1))
+  penalty <- 2 * gvals * .log_choose(P, k_pred)
+  val     <- bic + penalty
+
+  .ic_structure(val,
+    fit_class = "ncvsurv", k = k_pred, criterion = "EBIC",
+    extras = list(gamma = gvals, P = P, lambda = fit$lambda)
+  )
+}

@@ -223,3 +223,63 @@ compute_rbic.ncvreg <- function(fit, P_index, gamma = "ebic", ...) {
     extras = list(gamma = gamma_list, P_index = P_index, lambda = fit$lambda)
   )
 }
+
+#' @export
+compute_rbic.coxph <- function(fit, P_index, gamma = "ebic", ...) {
+  .check_P_index(P_index)
+  gammafn <- .resolve_gammafn(gamma)
+
+  n   <- fit$n
+  bic <- stats::BIC(fit)
+  k   <- .extract_k_coxph(fit)
+
+  active_terms <- attr(stats::terms(fit), "term.labels")
+  P_g <- vapply(P_index, length, integer(1))
+  k_g <- .count_selected(P_index, active_terms)
+
+  res <- .rbic_penalty(P_g, k_g, n, gammafn)
+  val <- bic + res$penalty
+
+  .ic_structure(val,
+    fit_class = "coxph", k = k, criterion = "RBIC",
+    extras = list(gamma = res$gamma, P_index = P_index)
+  )
+}
+
+#' @export
+compute_rbic.ncvsurv <- function(fit, P_index, gamma = "ebic", ...) {
+  .check_P_index(P_index)
+  gammafn <- .resolve_gammafn(gamma)
+
+  n       <- .extract_n_ncvsurv(fit)
+  bic     <- as.numeric(compute_bic(fit))
+  k_total <- .extract_k_ncvsurv(fit)
+  nlambda <- length(fit$lambda)
+
+  # ncvsurv$beta has no intercept row — use directly
+  beta      <- fit$beta
+  var_names <- rownames(beta)
+
+  bad <- setdiff(unlist(P_index), var_names)
+  if (length(bad) > 0)
+    stop("P_index contains variables not found in rownames(fit$beta): ",
+         paste(bad, collapse = ", "))
+
+  P_g <- vapply(P_index, length, integer(1))
+
+  val        <- numeric(nlambda)
+  gamma_list <- vector("list", nlambda)
+
+  for (l in seq_len(nlambda)) {
+    active          <- var_names[beta[, l] != 0]
+    k_g             <- .count_selected(P_index, active)
+    res             <- .rbic_penalty(P_g, k_g, n, gammafn)
+    val[l]          <- bic[l] + res$penalty
+    gamma_list[[l]] <- res$gamma
+  }
+
+  .ic_structure(val,
+    fit_class = "ncvsurv", k = k_total, criterion = "RBIC",
+    extras = list(gamma = gamma_list, P_index = P_index, lambda = fit$lambda)
+  )
+}

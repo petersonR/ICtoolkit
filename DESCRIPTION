@@ -28,6 +28,7 @@ Imports:
 Suggests:
     glmnet,
     ncvreg,
+    survival,
     MASS,
     testthat (>= 3.0.0),
     knitr,

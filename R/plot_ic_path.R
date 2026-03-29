@@ -68,8 +68,8 @@ plot_ic_path <- function(fit,
                           lwd       = 2,
                           ...) {
 
-  if (!inherits(fit, c("glmnet", "ncvreg")))
-    stop("'fit' must be a glmnet or ncvreg object.")
+  if (!inherits(fit, c("glmnet", "ncvreg", "ncvsurv")))
+    stop("'fit' must be a glmnet, ncvreg, or ncvsurv object.")
 
   valid_criteria <- c("AIC", "AICc", "BIC", "HQIC", "EBIC", "RBIC", "mBIC", "mBIC2")
   bad <- setdiff(criteria, valid_criteria)
