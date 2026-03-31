@@ -223,10 +223,14 @@ ic_step <- function(object,
     parallel::clusterExport(cl,
       c(".worker_env", "criterion", "P", "P_index", "kappa", "gamma"),
       envir = environment())
-    parallel::clusterCall(cl, function() {
-      requireNamespace("ICtoolkit", quietly = TRUE)
-      requireNamespace("survival", quietly = TRUE)
-    })
+    ## Attach packages on workers so bare function names in update calls
+    ## (e.g. coxph, glm) resolve.  stats is always attached; survival and
+    ## any other package providing the fitting function may not be.
+    .fit_fn   <- as.character(model_call[[1L]])
+    .fit_pkg  <- environmentName(environment(match.fun(.fit_fn)))
+    parallel::clusterCall(cl, function(pkgs) {
+      for (p in pkgs) require(p, character.only = TRUE, quietly = TRUE)
+    }, unique(c("ICtoolkit", .fit_pkg)))
 
     ## Lightweight worker function for PSOCK cluster evaluation.
     ## Created with globalenv() as its environment so that serialisation sends
