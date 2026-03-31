@@ -13,6 +13,7 @@ ic_step(
   P_index = NULL,
   kappa = 4,
   gamma = "ebic",
+  cl = NULL,
   trace = 1L,
   steps = 1000L
 )
@@ -44,6 +45,21 @@ Default \code{4}.  See \code{\link[=compute_mbic]{compute_mbic()}}.}
 \code{\link[=compute_rbic]{compute_rbic()}}.  Ignored for AIC / AICc / BIC / HQIC / mBIC / mBIC2.
 See those functions for accepted values (\code{"ebic"}, \code{"per_group"}, numeric,
 or a function).}
+
+\item{cl}{Cluster for parallel evaluation of candidates at each step.
+Either an integer (number of cores) or a \code{parallel::makeCluster()} object.
+When an integer is given on Unix/macOS, \code{parallel::mclapply()} is used
+(fork-based, zero-copy); on Windows a temporary PSOCK cluster is created.
+A user-supplied cluster object is used with \code{parallel::parLapply()} on
+all platforms.
+If the \pkg{pbapply} package is installed, a progress bar is shown
+when using a cluster object.
+
+\strong{Windows note:} PSOCK clusters must serialise data to each worker over
+sockets, so parallelisation overhead may outweigh the benefit for fast
+model fits (e.g., small \code{lm} problems). On Windows, parallel evaluation
+is most effective with expensive per-candidate fits such as large-\eqn{n}
+\code{glm} or \code{coxph} models, or when the number of candidates is very large.}
 
 \item{trace}{Integer controlling verbosity.  \code{0} = silent, \code{1} = one line
 per accepted step (default), \code{2} = all candidates at each step.}

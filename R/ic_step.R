@@ -46,6 +46,20 @@
 #'   [compute_rbic()].  Ignored for AIC / AICc / BIC / HQIC / mBIC / mBIC2.
 #'   See those functions for accepted values (`"ebic"`, `"per_group"`, numeric,
 #'   or a function).
+#' @param cl Cluster for parallel evaluation of candidates at each step.
+#'   Either an integer (number of cores) or a `parallel::makeCluster()` object.
+#'   When an integer is given on Unix/macOS, `parallel::mclapply()` is used
+#'   (fork-based, zero-copy); on Windows a temporary PSOCK cluster is created.
+#'   A user-supplied cluster object is used with `parallel::parLapply()` on
+#'   all platforms.
+#'   If the \pkg{pbapply} package is installed, a progress bar is shown
+#'   when using a cluster object.
+#'
+#'   **Windows note:** PSOCK clusters must serialise data to each worker over
+#'   sockets, so parallelisation overhead may outweigh the benefit for fast
+#'   model fits (e.g., small `lm` problems). On Windows, parallel evaluation
+#'   is most effective with expensive per-candidate fits such as large-\eqn{n}
+#'   `glm` or `coxph` models, or when the number of candidates is very large.
 #' @param trace Integer controlling verbosity.  `0` = silent, `1` = one line
 #'   per accepted step (default), `2` = all candidates at each step.
 #' @param steps Maximum number of steps.  Default is `1000`.
@@ -84,7 +98,7 @@
 #'         criterion = "BIC")
 #' }
 #'
-#' @importFrom stats update
+#' @importFrom stats update getCall
 #' @export
 ic_step <- function(object,
                     scope,
@@ -95,12 +109,37 @@ ic_step <- function(object,
                     P_index   = NULL,
                     kappa     = 4,
                     gamma     = "ebic",
+                    cl        = NULL,
                     trace     = 1L,
                     steps     = 1000L) {
 
   direction  <- match.arg(direction)
   criterion  <- match.arg(criterion)
   caller_env <- parent.frame()
+
+  # ---- set up parallel / progress-bar back-end ------------------------------
+  mc_cores    <- NULL
+  temp_cluster <- FALSE
+  if (!is.null(cl)) {
+    if (is.numeric(cl)) {
+      if (.Platform$OS.type == "unix") {
+        ## On Unix/macOS, mclapply forks and shares memory — no serialisation.
+        mc_cores <- as.integer(cl)
+        cl       <- NULL
+      } else {
+        cl <- parallel::makeCluster(as.integer(cl))
+        temp_cluster <- TRUE
+      }
+    } else if (!inherits(cl, "cluster")) {
+      stop("'cl' must be an integer (number of cores) or a 'cluster' object ",
+           "from parallel::makeCluster().", call. = FALSE)
+    }
+  }
+
+  if (temp_cluster) on.exit(parallel::stopCluster(cl), add = TRUE)
+
+  has_pbapply <- requireNamespace("pbapply", quietly = TRUE)
+  use_cluster <- !is.null(cl)
 
   # ---- validate criterion-specific arguments --------------------------------
   if (criterion == "EBIC" && is.null(P))
@@ -112,7 +151,6 @@ ic_step <- function(object,
 
   # ---- parse scope ----------------------------------------------------------
   # scope$lower / scope$upper (or a bare scope) may be a formula OR a
-
   # character vector of term labels.  The latter avoids R's formula parser,
   # which hits a stack overflow when the number of terms exceeds ~10 000.
   .terms_from_scope <- function(x) {
@@ -168,6 +206,49 @@ ic_step <- function(object,
   if (trace > 0L)
     message(sprintf("Start:  %s = %.4f", criterion, current_ic))
 
+  ## Set up PSOCK cluster workers (only when a cluster object is used).
+  ## On Unix with an integer cl, we use mclapply instead (no setup needed).
+  if (use_cluster) {
+    ## Build a minimal environment for workers containing only the data
+    ## referenced by the model call (not the caller's full frame).
+    model_call  <- getCall(object)
+    .worker_env <- new.env(parent = globalenv())
+    data_args   <- c("data", "weights", "subset", "offset")
+    for (da in data_args) {
+      sym <- model_call[[da]]
+      if (!is.null(sym) && is.symbol(sym))
+        .worker_env[[as.character(sym)]] <- eval(sym, caller_env)
+    }
+
+    parallel::clusterExport(cl,
+      c(".worker_env", "criterion", "P", "P_index", "kappa", "gamma"),
+      envir = environment())
+    parallel::clusterCall(cl, function() {
+      requireNamespace("ICtoolkit", quietly = TRUE)
+      requireNamespace("survival", quietly = TRUE)
+    })
+
+    ## Lightweight worker function for PSOCK cluster evaluation.
+    ## Created with globalenv() as its environment so that serialisation sends
+    ## only the function body (a reference), not ic_step()'s entire frame.
+    ## On workers, .worker_env / criterion / P / etc. are found in .GlobalEnv
+    ## (placed there by clusterExport above), and ICtoolkit:: qualifies the
+    ## compute functions so they resolve via the loaded namespace.
+    .par_eval <- eval(quote(function(ucall) {
+      cfit <- eval(ucall, .worker_env)
+      as.numeric(switch(criterion,
+        AIC   = ICtoolkit::compute_aic(cfit),
+        AICc  = ICtoolkit::compute_aicc(cfit),
+        BIC   = ICtoolkit::compute_bic(cfit),
+        HQIC  = ICtoolkit::compute_hqic(cfit),
+        EBIC  = ICtoolkit::compute_ebic(cfit, P = P, gamma = gamma),
+        RBIC  = ICtoolkit::compute_rbic(cfit, P_index = P_index, gamma = gamma),
+        mBIC  = ICtoolkit::compute_mbic(cfit, P = P, kappa = kappa),
+        mBIC2 = ICtoolkit::compute_mbic2(cfit, P = P, kappa = kappa)
+      ))
+    }), envir = globalenv())
+  }
+
   # ---- main loop ------------------------------------------------------------
   for (step in seq_len(steps)) {
 
@@ -196,22 +277,60 @@ ic_step <- function(object,
     }
 
     # evaluate all candidates
-    best_ic   <- current_ic
-    best_name <- NULL
-    best_fit  <- NULL
+    if (trace > 0L && length(candidates) > 100L)
+      message(sprintf("  Evaluating %d candidates...", length(candidates)))
 
-    for (cname in names(candidates)) {
-      cfit <- eval(update(current, candidates[[cname]], evaluate = FALSE), caller_env)
-      cic  <- .ic(cfit)
+    ## Build the unevaluated update calls (lightweight, no data copying)
+    update_calls <- lapply(candidates, function(fml) {
+      update(current, fml, evaluate = FALSE)
+    })
 
-      if (trace > 1L)
-        message(sprintf("  %-40s %s = %.4f", cname, criterion, cic))
+    ## Evaluate all candidates (parallel or sequential).
+    ## When pbapply is available a progress bar with ETA is shown.
+    .seq_eval <- function(ucall) .ic(eval(ucall, caller_env))
 
-      if (cic < best_ic) {
-        best_ic   <- cic
-        best_name <- cname
-        best_fit  <- cfit
+    if (!is.null(mc_cores)) {
+      ## Fork-based (Unix): no serialisation, workers inherit parent memory.
+      ## pbapply::pblapply with an integer cl uses mclapply internally on Unix.
+      if (has_pbapply) {
+        ic_values <- unlist(pbapply::pblapply(update_calls, .seq_eval,
+                                              cl = mc_cores))
+      } else {
+        ic_values <- unlist(parallel::mclapply(update_calls, .seq_eval,
+                                               mc.cores = mc_cores))
       }
+    } else if (use_cluster) {
+      ## PSOCK / user-supplied cluster
+      if (has_pbapply) {
+        ic_values <- unlist(pbapply::pblapply(update_calls, .par_eval, cl = cl))
+      } else {
+        ic_values <- unlist(parallel::parLapply(cl, update_calls, .par_eval))
+      }
+    } else {
+      ## Sequential
+      if (has_pbapply) {
+        ic_values <- unlist(pbapply::pblapply(update_calls, .seq_eval))
+      } else {
+        ic_values <- unlist(lapply(update_calls, .seq_eval))
+      }
+    }
+
+    if (trace > 1L) {
+      for (j in seq_along(ic_values))
+        message(sprintf("  %-40s %s = %.4f",
+                        names(candidates)[j], criterion, ic_values[j]))
+    }
+
+    ## Find the best candidate
+    best_idx <- which.min(ic_values)
+    best_ic  <- ic_values[best_idx]
+
+    if (best_ic >= current_ic) {
+      best_name <- NULL
+    } else {
+      best_name <- names(candidates)[best_idx]
+      ## Refit only the winner locally (workers may not return the fit object)
+      best_fit <- eval(update_calls[[best_idx]], caller_env)
     }
 
     if (is.null(best_name)) {

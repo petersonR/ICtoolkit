@@ -265,3 +265,129 @@ test_that("ic_step both BIC matches MASS::stepAIC with k=log(n) on lm", {
   expect_equal(sort(attr(terms(res_ours), "term.labels")),
                sort(attr(terms(res_mass), "term.labels")))
 })
+
+# ---------------------------------------------------------------------------
+# Parallel evaluation via cl argument
+# ---------------------------------------------------------------------------
+
+test_that("ic_step errors on invalid cl argument", {
+  fit_null <- lm(ies_total ~ 1, data = covid_eol)
+  fit_full <- lm(ies_total ~ age + sex, data = covid_eol)
+  expect_error(
+    ic_step(fit_null, scope = list(lower = fit_null, upper = fit_full),
+            criterion = "AIC", cl = "bad", trace = 0),
+    "'cl' must be an integer"
+  )
+})
+
+test_that("ic_step with cl=integer gives same result as sequential (forward BIC)", {
+  skip_on_cran()
+  skip_if_not_installed("pbapply")
+  d        <- .make_step_data()
+  fit_null <- lm(ies_total ~ 1, data = d)
+  scope    <- list(lower = ~ 1, upper = ies_total ~ age + I(age^2) + race +
+    ethnicity + sex + noise1 + noise2 + noise3 + noise4 + noise5 + noise6 +
+    noise7 + noise8)
+  res_seq <- ic_step(fit_null, scope = scope, direction = "forward",
+                     criterion = "BIC", trace = 0)
+  res_par <- ic_step(fit_null, scope = scope, direction = "forward",
+                     criterion = "BIC", cl = 2L, trace = 0)
+  expect_equal(sort(attr(terms(res_par), "term.labels")),
+               sort(attr(terms(res_seq), "term.labels")))
+})
+
+test_that("ic_step with cl=integer gives same result as sequential (backward AIC)", {
+  skip_on_cran()
+  skip_if_not_installed("pbapply")
+  d        <- .make_step_data()
+  fit_full <- lm(ies_total ~ age + I(age^2) + race + ethnicity + sex +
+    noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8,
+    data = d)
+  res_seq <- ic_step(fit_full, direction = "backward", criterion = "AIC",
+                     trace = 0)
+  res_par <- ic_step(fit_full, direction = "backward", criterion = "AIC",
+                     cl = 2L, trace = 0)
+  expect_equal(sort(attr(terms(res_par), "term.labels")),
+               sort(attr(terms(res_seq), "term.labels")))
+})
+
+test_that("ic_step with pre-made cluster object works", {
+  skip_on_cran()
+  skip_if_not_installed("pbapply")
+  d        <- .make_step_data()
+  fit_null <- lm(ies_total ~ 1, data = d)
+  scope    <- list(lower = ~ 1, upper = ies_total ~ age + I(age^2) + race +
+    ethnicity + sex + noise1 + noise2 + noise3 + noise4 + noise5 + noise6 +
+    noise7 + noise8)
+  cl <- parallel::makeCluster(2L)
+  on.exit(parallel::stopCluster(cl), add = TRUE)
+  res_seq <- ic_step(fit_null, scope = scope, direction = "forward",
+                     criterion = "BIC", trace = 0)
+  res_par <- ic_step(fit_null, scope = scope, direction = "forward",
+                     criterion = "BIC", cl = cl, trace = 0)
+  expect_equal(sort(attr(terms(res_par), "term.labels")),
+               sort(attr(terms(res_seq), "term.labels")))
+})
+
+test_that("ic_step with cl for glm gives same result as sequential", {
+  skip_on_cran()
+  skip_if_not_installed("pbapply")
+  d        <- .make_step_data()
+  fit_full <- glm(death ~ age + I(age^2) + race + ethnicity + sex +
+    noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8,
+    data = d, family = binomial)
+  suppressWarnings({
+    res_seq <- ic_step(fit_full, direction = "backward", criterion = "AIC",
+                       trace = 0)
+    res_par <- ic_step(fit_full, direction = "backward", criterion = "AIC",
+                       cl = 2L, trace = 0)
+  })
+  expect_equal(sort(attr(terms(res_par), "term.labels")),
+               sort(attr(terms(res_seq), "term.labels")))
+})
+
+test_that("ic_step parallel step_path matches sequential step_path", {
+  skip_on_cran()
+  skip_if_not_installed("pbapply")
+  d        <- .make_step_data()
+  fit_null <- lm(ies_total ~ 1, data = d)
+  scope    <- list(lower = ~ 1, upper = ies_total ~ age + I(age^2) + race +
+    ethnicity + sex + noise1 + noise2 + noise3 + noise4 + noise5 + noise6 +
+    noise7 + noise8)
+  res_seq <- ic_step(fit_null, scope = scope, direction = "forward",
+                     criterion = "BIC", trace = 0)
+  res_par <- ic_step(fit_null, scope = scope, direction = "forward",
+                     criterion = "BIC", cl = 2L, trace = 0)
+  expect_equal(attr(res_par, "step_path"), attr(res_seq, "step_path"))
+})
+
+test_that("ic_step parallel is faster than sequential on a wide dataset", {
+  skip_on_cran()
+  skip_on_os("windows")
+  set.seed(1)
+  n <- 5000
+  p <- 300
+  X <- matrix(rnorm(n * p), n, p)
+  colnames(X) <- paste0("x", seq_len(p))
+  d <- as.data.frame(X)
+  d$y <- rbinom(n, 1, 0.5)
+
+  upper_terms <- paste0("x", seq_len(p))
+  fit_null <- glm(y ~ 1, data = d, family = binomial)
+  scope <- list(lower = ~ 1, upper = upper_terms)
+
+  # R CMD check enforces a 2-core limit via _R_CHECK_LIMIT_CORES_
+  n_cores <- 2L
+
+  t_seq <- system.time(
+    suppressWarnings(ic_step(fit_null, scope = scope, direction = "forward",
+            criterion = "BIC", trace = 0, steps = 3L))
+  )[["elapsed"]]
+
+  t_par <- system.time(
+    suppressWarnings(ic_step(fit_null, scope = scope, direction = "forward",
+            criterion = "BIC", cl = n_cores, trace = 0, steps = 3L))
+  )[["elapsed"]]
+
+  expect_lt(t_par, t_seq)
+})

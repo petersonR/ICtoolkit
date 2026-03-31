@@ -30,6 +30,7 @@ Suggests:
     ncvreg,
     survival,
     MASS,
+    pbapply,
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,
