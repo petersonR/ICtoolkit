@@ -164,5 +164,5 @@ attr(selected, "step_path")
 #> 3    2   + cyl 161.8730
 ```
 
-This repository was drafted by Ryan Peterson. It has been refined using
-Claude 4.6.
+This package was developed by Ryan Peterson. Code review,
+parallelization, and testing were assisted by Claude (Anthropic).
