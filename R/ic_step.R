@@ -198,13 +198,6 @@ ic_step <- function(object,
     }
   }
 
-  # ---- warm-start setup ------------------------------------------------------
-  # coxph uses 'init' for starting values.  Warm starts cut Newton-Raphson
-
-  # iterations from ~5-10 to ~1-3.  Not used for glm because small IRLS
-  # precision differences can tip borderline selection decisions.
-  warm_param <- if (inherits(object, "coxph")) "init" else NULL
-
   # ---- initialise -----------------------------------------------------------
   current    <- object
   current_ic <- .ic(current)
@@ -228,8 +221,7 @@ ic_step <- function(object,
     }
 
     parallel::clusterExport(cl,
-      c(".worker_env", "criterion", "P", "P_index", "kappa", "gamma",
-        "warm_param"),
+      c(".worker_env", "criterion", "P", "P_index", "kappa", "gamma"),
       envir = environment())
     ## Attach packages on workers so bare function names in update calls
     ## (e.g. coxph, glm) resolve.  stats is always attached; survival and
@@ -247,12 +239,7 @@ ic_step <- function(object,
     ## (placed there by clusterExport above), and ICtoolkit:: qualifies the
     ## compute functions so they resolve via the loaded namespace.
     .par_eval <- eval(quote(function(ucall) {
-      cfit <- tryCatch(eval(ucall, .worker_env), error = function(e) {
-        if (!is.null(warm_param)) {
-          ucall[[warm_param]] <- NULL
-          eval(ucall, .worker_env)
-        } else stop(e)
-      })
+      cfit <- eval(ucall, .worker_env)
       as.numeric(switch(criterion,
         AIC   = ICtoolkit::compute_aic(cfit),
         AICc  = ICtoolkit::compute_aicc(cfit),
@@ -297,49 +284,14 @@ ic_step <- function(object,
     if (trace > 0L && length(candidates) > 100L)
       message(sprintf("  Evaluating %d candidates...", length(candidates)))
 
-    ## Build the unevaluated update calls (lightweight, no data copying).
-    ## For glm/coxph, inject warm-start values so the iterative solver
-    ## starts near the current solution (typically converges in 1-3 steps
-    ## instead of 5-10+).  tryCatch in the eval functions handles any
-    ## dimension mismatches (e.g. factor terms adding multiple columns).
+    ## Build the unevaluated update calls (lightweight, no data copying)
     update_calls <- lapply(candidates, function(fml) {
       update(current, fml, evaluate = FALSE)
     })
-    if (!is.null(warm_param)) {
-      current_coefs <- stats::coef(current)
-      ## Map term labels → model matrix column indices via 'assign' attribute.
-      ## This correctly handles factors (one term → multiple coefficients).
-      mm_assign     <- attr(stats::model.matrix(current), "assign")
-      term_labels   <- attr(stats::terms(current), "term.labels")
-      for (i in seq_along(update_calls)) {
-        nm <- names(candidates)[i]
-        if (startsWith(nm, "+ ")) {
-          ## Forward: pad with one zero (works for numeric predictors;
-          ## tryCatch in eval handles factors that add multiple columns).
-          update_calls[[i]][[warm_param]] <- c(current_coefs, 0)
-        } else if (startsWith(nm, "- ")) {
-          trm      <- sub("^- ", "", nm)
-          term_idx <- match(trm, term_labels)
-          if (!is.na(term_idx)) {
-            drop_cols <- which(mm_assign == term_idx)
-            update_calls[[i]][[warm_param]] <- current_coefs[-drop_cols]
-          }
-        }
-      }
-    }
 
     ## Evaluate all candidates (parallel or sequential).
     ## When pbapply is available a progress bar with ETA is shown.
-    ## tryCatch handles warm-start dimension mismatches by retrying cold.
-    .seq_eval <- function(ucall) {
-      cfit <- tryCatch(eval(ucall, caller_env), error = function(e) {
-        if (!is.null(warm_param)) {
-          ucall[[warm_param]] <- NULL
-          eval(ucall, caller_env)
-        } else stop(e)
-      })
-      .ic(cfit)
-    }
+    .seq_eval <- function(ucall) .ic(eval(ucall, caller_env))
 
     if (!is.null(mc_cores)) {
       ## Fork-based (Unix): no serialisation, workers inherit parent memory.
@@ -382,13 +334,7 @@ ic_step <- function(object,
     } else {
       best_name <- names(candidates)[best_idx]
       ## Refit only the winner locally (workers may not return the fit object)
-      best_call <- update_calls[[best_idx]]
-      best_fit  <- tryCatch(eval(best_call, caller_env), error = function(e) {
-        if (!is.null(warm_param)) {
-          best_call[[warm_param]] <- NULL
-          eval(best_call, caller_env)
-        } else stop(e)
-      })
+      best_fit <- eval(update_calls[[best_idx]], caller_env)
     }
 
     if (is.null(best_name)) {

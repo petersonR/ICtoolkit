@@ -183,7 +183,8 @@ test_that("ic_step both AIC matches MASS::stepAIC both on lm", {
 test_that("ic_step backward AIC matches MASS::stepAIC backward on glm", {
   d        <- .make_step_data()
   fit_full <- glm(death ~ age + I(age^2) + race + ethnicity + sex +
-    noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8, data = d, family = binomial)
+    noise1 + noise2 + noise3 + noise4 + noise5 + noise6 + noise7 + noise8,
+    data = d, family = binomial)
   suppressWarnings({
     res_ours <- ic_step(fit_full, direction = "backward", criterion = "AIC", trace = 0)
     res_mass <- MASS::stepAIC(fit_full, direction = "backward", trace = 0)
@@ -412,31 +413,3 @@ test_that("ic_step forward BIC works for coxph", {
   expect_true(nrow(path) > 1L)
 })
 
-test_that("coxph warm starts actually fire (init injected into calls)", {
-  skip_if_not_installed("survival")
-  lung <- survival::lung
-  lung <- lung[complete.cases(lung[, c("time", "status", "age", "sex",
-                                        "ph.ecog", "wt.loss")]), ]
-  fit0 <- survival::coxph(survival::Surv(time, status) ~ 1, data = lung)
-  scope <- list(lower = ~ 1,
-                upper = survival::Surv(time, status) ~ age + sex + ph.ecog + wt.loss)
-
-  # Patch ic_step's eval to record whether 'init' was present in calls.
-  # We do this by running one step and inspecting the update calls.
-  # A forward step from a null coxph model should produce calls with init.
-  fit1 <- survival::coxph(survival::Surv(time, status) ~ sex, data = lung)
-  ucall <- update(fit1, survival::Surv(time, status) ~ sex + age,
-                  evaluate = FALSE)
-  # Manually add init (mimicking what ic_step does for forward steps)
-  ucall$init <- c(stats::coef(fit1), 0)
-  # This must succeed without error — proves init has correct length
-  fit_warm <- eval(ucall)
-  expect_s3_class(fit_warm, "coxph")
-  expect_equal(length(stats::coef(fit_warm)), 2L)
-
-  # Verify warm start actually reduces iterations vs cold start
-  ucall_cold <- update(fit1, survival::Surv(time, status) ~ sex + age,
-                       evaluate = FALSE)
-  fit_cold <- eval(ucall_cold)
-  expect_true(fit_warm$iter <= fit_cold$iter)
-})
