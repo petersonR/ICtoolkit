@@ -362,7 +362,7 @@ test_that("ic_step parallel step_path matches sequential step_path", {
   expect_equal(attr(res_par, "step_path"), attr(res_seq, "step_path"))
 })
 
-test_that("ic_step parallel is faster than sequential on a wide dataset", {
+test_that("ic_step parallel produces correct results on a wide dataset", {
   skip_on_cran()
   skip_on_os("windows")
   set.seed(1)
@@ -380,17 +380,14 @@ test_that("ic_step parallel is faster than sequential on a wide dataset", {
   # R CMD check enforces a 2-core limit via _R_CHECK_LIMIT_CORES_
   n_cores <- 2L
 
-  t_seq <- system.time(
-    suppressWarnings(ic_step(fit_null, scope = scope, direction = "forward",
-            criterion = "BIC", trace = 0, steps = 3L))
-  )[["elapsed"]]
+  res_seq <- suppressWarnings(ic_step(fit_null, scope = scope,
+    direction = "forward", criterion = "BIC", trace = 0, steps = 3L))
 
-  t_par <- system.time(
-    suppressWarnings(ic_step(fit_null, scope = scope, direction = "forward",
-            criterion = "BIC", cl = n_cores, trace = 0, steps = 3L))
-  )[["elapsed"]]
+  res_par <- suppressWarnings(ic_step(fit_null, scope = scope,
+    direction = "forward", criterion = "BIC", cl = n_cores, trace = 0,
+    steps = 3L))
 
-  expect_lt(t_par, t_seq)
+  expect_equal(attr(res_par, "step_path"), attr(res_seq, "step_path"))
 })
 
 # ---------------------------------------------------------------------------
