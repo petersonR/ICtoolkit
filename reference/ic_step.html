@@ -69,6 +69,7 @@ provided by ICtoolkit: AIC, AICc, BIC, HQIC, EBIC, RBIC, mBIC, or mBIC2.</p>
 <span>  P_index <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  kappa <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>  gamma <span class="op">=</span> <span class="st">"ebic"</span>,</span>
+<span>  cl <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  trace <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  steps <span class="op">=</span> <span class="fl">1000L</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -119,6 +120,22 @@ Default <code>4</code>.  See <code><a href="compute_mbic.html">compute_mbic()</a
 <code><a href="compute_rbic.html">compute_rbic()</a></code>.  Ignored for AIC / AICc / BIC / HQIC / mBIC / mBIC2.
 See those functions for accepted values (<code>"ebic"</code>, <code>"per_group"</code>, numeric,
 or a function).</p></dd>
+
+
+<dt id="arg-cl">cl<a class="anchor" aria-label="anchor" href="#arg-cl"></a></dt>
+<dd><p>Cluster for parallel evaluation of candidates at each step.
+Either an integer (number of cores) or a <code><a href="https://rdrr.io/r/parallel/makeCluster.html" class="external-link">parallel::makeCluster()</a></code> object.
+When an integer is given on Unix/macOS, <code><a href="https://rdrr.io/r/parallel/mclapply.html" class="external-link">parallel::mclapply()</a></code> is used
+(fork-based, zero-copy); on Windows a temporary PSOCK cluster is created.
+A user-supplied cluster object is used with <code><a href="https://rdrr.io/r/parallel/clusterApply.html" class="external-link">parallel::parLapply()</a></code> on
+all platforms.
+If the <span class="pkg">pbapply</span> package is installed, a progress bar is shown
+when using a cluster object.</p>
+<p><strong>Windows note:</strong> PSOCK clusters must serialise data to each worker over
+sockets, so parallelisation overhead may outweigh the benefit for fast
+model fits (e.g., small <code>lm</code> problems). On Windows, parallel evaluation
+is most effective with expensive per-candidate fits such as large-\(n\)
+<code>glm</code> or <code>coxph</code> models, or when the number of candidates is very large.</p></dd>
 
 
 <dt id="arg-trace">trace<a class="anchor" aria-label="anchor" href="#arg-trace"></a></dt>
