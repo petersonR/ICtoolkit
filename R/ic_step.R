@@ -111,17 +111,26 @@ ic_step <- function(object,
     stop("'P' (total candidate predictors) must be supplied for criterion = '", criterion, "'.")
 
   # ---- parse scope ----------------------------------------------------------
+  # scope$lower / scope$upper (or a bare scope) may be a formula OR a
+
+  # character vector of term labels.  The latter avoids R's formula parser,
+  # which hits a stack overflow when the number of terms exceeds ~10 000.
+  .terms_from_scope <- function(x) {
+    if (is.character(x)) return(x)
+    attr(stats::terms(stats::formula(x)), "term.labels")
+  }
+
   lower_terms <- character(0)
   upper_terms <- attr(stats::terms(object), "term.labels")
 
   if (!missing(scope) && !is.null(scope)) {
     if (is.list(scope)) {
       if (!is.null(scope$lower))
-        lower_terms <- attr(stats::terms(stats::formula(scope$lower)), "term.labels")
+        lower_terms <- .terms_from_scope(scope$lower)
       if (!is.null(scope$upper))
-        upper_terms <- attr(stats::terms(stats::formula(scope$upper)), "term.labels")
+        upper_terms <- .terms_from_scope(scope$upper)
     } else {
-      upper_terms <- attr(stats::terms(stats::formula(scope)), "term.labels")
+      upper_terms <- .terms_from_scope(scope)
     }
   }
 
