@@ -3,7 +3,7 @@
 \docType{data}
 \name{covid_eol}
 \alias{covid_eol}
-\title{Synthetic ICU end-of-life PTSD survey data}
+\title{ICU end-of-life PTSD survey data}
 \format{
 A data frame with 298 rows and 16 variables:
 \describe{
@@ -36,16 +36,16 @@ Month of ICU admission.}
 }
 }
 \source{
-Synthetic data generated to resemble a real ICU family-member survey.
-Not from actual patient records.
+De-identified data from an ICU family-member survey; used with
+permission.
 }
 \usage{
 covid_eol
 }
 \description{
-Synthetic data modeled after a 2021--2022 study of family members of
-ICU patients who were isolated from loved ones during the COVID-19 pandemic.
-Respondents were assessed for PTSD using the Impact of Events Scale-6
-(IES-6); a score of 10 or higher indicates likely PTSD.
+Data from a 2021--2022 study of family members of ICU patients who were
+isolated from loved ones during the COVID-19 pandemic. Respondents were
+assessed for PTSD using the Impact of Events Scale-6 (IES-6); a score of
+10 or higher indicates likely PTSD.
 }
 \keyword{datasets}

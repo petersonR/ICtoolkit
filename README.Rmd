@@ -20,20 +20,25 @@ knitr::opts_chunk$set(
 [![Codecov](https://codecov.io/gh/petersonR/ICtoolkit/branch/main/graph/badge.svg)](https://app.codecov.io/gh/petersonR/ICtoolkit)
 <!-- badges: end -->
 
-ICtoolkit provides a unified interface for computing five information criteria
-across four model classes, plus a flexible stepwise selection function.
+ICtoolkit provides a unified interface for computing eight information criteria
+across six model classes, plus flexible stepwise selection and regularization
+path visualization.
 
 | Criterion | Function | Reference |
 |-----------|----------|-----------|
 | AIC | `compute_aic()` | Akaike (1974) |
 | AICc | `compute_aicc()` | Hurvich & Tsai (1989) |
 | BIC | `compute_bic()` | Schwarz (1978) |
+| HQIC | `compute_hqic()` | Hannan & Quinn (1979) |
 | EBIC | `compute_ebic()` | Chen & Chen (2008) |
+| mBIC | `compute_mbic()` | Bogdan, Ghosh & Doerge (2004) |
+| mBIC2 | `compute_mbic2()` | Frommlet & Bogdan (2013) |
 | RBIC | `compute_rbic()` | Peterson & Cavanaugh (2026+) |
 
-**Supported model classes:** `lm`, `glm`, `glmnet`, `ncvreg`.
-For `glmnet` and `ncvreg`, each criterion returns a vector of length
-`length(lambda)` — one value per point on the regularization path.
+**Supported model classes:** `lm`, `glm`, `coxph`, `glmnet`, `ncvreg`,
+`ncvsurv`.
+For `glmnet`, `ncvreg`, and `ncvsurv`, each criterion returns a vector of
+length `length(lambda)` — one value per point on the regularization path.
 
 ## Installation
 
@@ -103,7 +108,8 @@ compute_rbic(fit, P_index = P_index)
 
 ### Stepwise selection with `ic_step()`
 
-`ic_step()` generalises `MASS::stepAIC` to all five criteria:
+`ic_step()` generalises `MASS::stepAIC` to all eight criteria and supports
+parallel evaluation via the `cl` argument:
 
 ```{r step-quick}
 fit_null <- lm(mpg ~ 1, data = mtcars)
@@ -120,6 +126,19 @@ formula(selected)
 
 # The selection path is stored as an attribute
 attr(selected, "step_path")
+```
+
+### Expanding the search space with `expand_scope()`
+
+`expand_scope()` builds candidate formulas with interactions and polynomial
+terms for use with `ic_step()`. It also returns a `P_index` list for use with
+`compute_rbic()`:
+
+```{r expand-quick}
+es <- expand_scope(ies_total ~ age + race + ethnicity + sex,
+                   data = covid_eol, k = 2, poly = 2)
+es$formula
+names(es$P_index)
 ```
 
 This package was developed by Ryan Peterson. Code review, parallelization, and testing were assisted by Claude (Anthropic).

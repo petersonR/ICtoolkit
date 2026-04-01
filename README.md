@@ -9,21 +9,25 @@
 [![Codecov](https://codecov.io/gh/petersonR/ICtoolkit/branch/main/graph/badge.svg)](https://app.codecov.io/gh/petersonR/ICtoolkit)
 <!-- badges: end -->
 
-ICtoolkit provides a unified interface for computing five information
-criteria across four model classes, plus a flexible stepwise selection
-function.
+ICtoolkit provides a unified interface for computing eight information
+criteria across six model classes, plus flexible stepwise selection and
+regularization path visualization.
 
-| Criterion | Function         | Reference                    |
-|-----------|------------------|------------------------------|
-| AIC       | `compute_aic()`  | Akaike (1974)                |
-| AICc      | `compute_aicc()` | Hurvich & Tsai (1989)        |
-| BIC       | `compute_bic()`  | Schwarz (1978)               |
-| EBIC      | `compute_ebic()` | Chen & Chen (2008)           |
-| RBIC      | `compute_rbic()` | Peterson & Cavanaugh (2026+) |
+| Criterion | Function          | Reference                     |
+|-----------|-------------------|-------------------------------|
+| AIC       | `compute_aic()`   | Akaike (1974)                 |
+| AICc      | `compute_aicc()`  | Hurvich & Tsai (1989)         |
+| BIC       | `compute_bic()`   | Schwarz (1978)                |
+| HQIC      | `compute_hqic()`  | Hannan & Quinn (1979)         |
+| EBIC      | `compute_ebic()`  | Chen & Chen (2008)            |
+| mBIC      | `compute_mbic()`  | Bogdan, Ghosh & Doerge (2004) |
+| mBIC2     | `compute_mbic2()` | Frommlet & Bogdan (2013)      |
+| RBIC      | `compute_rbic()`  | Peterson & Cavanaugh (2026+)  |
 
-**Supported model classes:** `lm`, `glm`, `glmnet`, `ncvreg`. For
-`glmnet` and `ncvreg`, each criterion returns a vector of length
-`length(lambda)` — one value per point on the regularization path.
+**Supported model classes:** `lm`, `glm`, `coxph`, `glmnet`, `ncvreg`,
+`ncvsurv`. For `glmnet`, `ncvreg`, and `ncvsurv`, each criterion returns
+a vector of length `length(lambda)` — one value per point on the
+regularization path.
 
 ## Installation
 
@@ -140,7 +144,8 @@ compute_rbic(fit, P_index = P_index)
 
 ### Stepwise selection with `ic_step()`
 
-`ic_step()` generalises `MASS::stepAIC` to all five criteria:
+`ic_step()` generalises `MASS::stepAIC` to all eight criteria and
+supports parallel evaluation via the `cl` argument:
 
 ``` r
 fit_null <- lm(mpg ~ 1, data = mtcars)
@@ -162,6 +167,23 @@ attr(selected, "step_path")
 #> 1    0 <start> 211.6870
 #> 2    1    + wt 170.4266
 #> 3    2   + cyl 161.8730
+```
+
+### Expanding the search space with `expand_scope()`
+
+`expand_scope()` builds candidate formulas with interactions and
+polynomial terms for use with `ic_step()`. It also returns a `P_index`
+list for use with `compute_rbic()`:
+
+``` r
+es <- expand_scope(ies_total ~ age + race + ethnicity + sex,
+                   data = covid_eol, k = 2, poly = 2)
+es$formula
+#> ies_total ~ age + race + ethnicity + sex + I(age^2) + age:race + 
+#>     age:ethnicity + age:sex + race:ethnicity + race:sex + ethnicity:sex
+#> <environment: 0x1258ddaf8>
+names(es$P_index)
+#> [1] "main"       "poly_2"     "interact_2"
 ```
 
 This package was developed by Ryan Peterson. Code review,

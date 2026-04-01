@@ -26,24 +26,28 @@ covid_eol$race <- relevel(covid_eol$race, "White")
 
 ## Overview
 
-ICtoolkit provides a unified interface for five information criteria across four
+ICtoolkit provides a unified interface for eight information criteria across six
 model classes:
 
 | Criterion | Function | Description |
 |-----------|----------|-------------|
 | AIC | `compute_aic()` | Akaike (1974) |
-| AICc | `compute_aicc()` | Small-sample correction |
+| AICc | `compute_aicc()` | Small-sample correction; Hurvich & Tsai (1989) |
 | BIC | `compute_bic()` | Schwarz (1978) |
+| HQIC | `compute_hqic()` | Hannan & Quinn (1979) |
 | EBIC | `compute_ebic()` | Extended BIC; Chen & Chen (2008) |
+| mBIC | `compute_mbic()` | Modified BIC; Bogdan, Ghosh & Doerge (2004) |
+| mBIC2 | `compute_mbic2()` | Modified BIC2; Frommlet & Bogdan (2013) |
 | RBIC | `compute_rbic()` | Grouped EBIC for structured predictors |
 
-All functions support `lm`, `glm`, `glmnet`, and `ncvreg` objects.
-For `glmnet` and `ncvreg`, the criterion is evaluated at every point on the
-regularization path (one value per `lambda`), which can itself be used as a
-selection algorithm without any stepwise fitting.
+All functions support `lm`, `glm`, `coxph`, `glmnet`, `ncvreg`, and `ncvsurv`
+objects.
+For `glmnet`, `ncvreg`, and `ncvsurv`, the criterion is evaluated at every
+point on the regularization path (one value per `lambda`), which can itself be
+used as a selection algorithm without any stepwise fitting.
 
 Throughout this vignette we use the `covid_eol` dataset bundled with the
-package — a synthetic dataset modeled after a study of family members of
+package — a de-identified dataset from a study of family members of
 ICU patients surveyed for PTSD during the COVID-19 pandemic (n = 298).
 
 ---
@@ -144,7 +148,7 @@ attr(result_rbic, "gamma")
 
 ## 4. IC over the regularization path with `glmnet`
 
-For `glmnet` objects, all five criteria return a **vector** of length
+For `glmnet` objects, all eight criteria return a **vector** of length
 `length(lambda)`.  This makes IC-based selection straightforward: pick the
 `lambda` that minimises the criterion.
 
@@ -205,7 +209,7 @@ es$P_index
 
 ## 6. Stepwise selection with `ic_step()`
 
-`ic_step()` extends `MASS::stepAIC` to all five criteria for `lm`/`glm`
+`ic_step()` extends `MASS::stepAIC` to all eight criteria for `lm`/`glm`
 objects. Combined with `expand_scope()`, it makes RBIC-guided stepwise
 selection through interactions straightforward.
 
@@ -316,8 +320,20 @@ while correctly excluding the 44 noise interactions.
 Akaike, H. (1974). A new look at the statistical model identification.
 *IEEE Transactions on Automatic Control*, **19**(6), 716–723.
 
+Bogdan, M., Ghosh, J. K., & Doerge, R. W. (2004). Modifying the Schwarz
+Bayesian information criterion to locate multiple interacting quantitative
+trait loci. *Genetics*, **167**(2), 989–999.
+
 Chen, J., & Chen, Z. (2008). Extended Bayesian information criteria for model
 selection with large model spaces. *Biometrika*, **95**(3), 759–771.
+
+Frommlet, F., & Bogdan, M. (2013). Some optimality properties of FDR
+controlling rules under sparsity. *Electronic Journal of Statistics*, **7**,
+1328–1368.
+
+Hannan, E. J., & Quinn, B. G. (1979). The determination of the order of an
+autoregression. *Journal of the Royal Statistical Society: Series B*,
+**41**(2), 190–195.
 
 Hurvich, C. M., & Tsai, C.-L. (1989). Regression and time series model
 selection in small samples. *Biometrika*, **76**(2), 297–307.
