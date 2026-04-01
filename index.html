@@ -73,7 +73,7 @@
 </h1></div>
 <!-- badges: start -->
 
-<p>ICtoolkit provides a unified interface for computing five information criteria across four model classes, plus a flexible stepwise selection function.</p>
+<p>ICtoolkit provides a unified interface for computing eight information criteria across six model classes, plus flexible stepwise selection and regularization path visualization.</p>
 <table class="table">
 <thead><tr class="header">
 <th>Criterion</th>
@@ -97,18 +97,33 @@
 <td>Schwarz (1978)</td>
 </tr>
 <tr class="even">
+<td>HQIC</td>
+<td><code><a href="reference/compute_hqic.html">compute_hqic()</a></code></td>
+<td>Hannan &amp; Quinn (1979)</td>
+</tr>
+<tr class="odd">
 <td>EBIC</td>
 <td><code><a href="reference/compute_ebic.html">compute_ebic()</a></code></td>
 <td>Chen &amp; Chen (2008)</td>
 </tr>
+<tr class="even">
+<td>mBIC</td>
+<td><code><a href="reference/compute_mbic.html">compute_mbic()</a></code></td>
+<td>Bogdan, Ghosh &amp; Doerge (2004)</td>
+</tr>
 <tr class="odd">
+<td>mBIC2</td>
+<td><code><a href="reference/compute_mbic2.html">compute_mbic2()</a></code></td>
+<td>Frommlet &amp; Bogdan (2013)</td>
+</tr>
+<tr class="even">
 <td>RBIC</td>
 <td><code><a href="reference/compute_rbic.html">compute_rbic()</a></code></td>
 <td>Peterson &amp; Cavanaugh (2026+)</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Supported model classes:</strong> <code>lm</code>, <code>glm</code>, <code>glmnet</code>, <code>ncvreg</code>. For <code>glmnet</code> and <code>ncvreg</code>, each criterion returns a vector of length <code>length(lambda)</code> — one value per point on the regularization path.</p>
+<p><strong>Supported model classes:</strong> <code>lm</code>, <code>glm</code>, <code>coxph</code>, <code>glmnet</code>, <code>ncvreg</code>, <code>ncvsurv</code>. For <code>glmnet</code>, <code>ncvreg</code>, and <code>ncvsurv</code>, each criterion returns a vector of length <code>length(lambda)</code> — one value per point on the regularization path.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -184,7 +199,7 @@
 <span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span> <span class="op">*</span> <span class="va">p</span><span class="op">)</span>, <span class="va">n</span>, <span class="va">p</span>,</span>
 <span>            dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="cn">NULL</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="fl">1</span><span class="op">:</span><span class="va">p</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">X</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span> <span class="op">*</span> <span class="fl">2</span> <span class="op">-</span> <span class="va">X</span><span class="op">[</span>, <span class="fl">3</span><span class="op">]</span> <span class="op">*</span> <span class="fl">0.25</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span><span class="va">fit_glmnet</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/glmnet/man/glmnet.html" class="external-link">glmnet</a></span><span class="op">(</span><span class="va">X</span>, <span class="va">y</span><span class="op">)</span></span>
+<span><span class="va">fit_glmnet</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://glmnet.stanford.edu/reference/glmnet.html" class="external-link">glmnet</a></span><span class="op">(</span><span class="va">X</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># plot_ic_path computes + plots IC paths in one call.</span></span>
 <span><span class="fu"><a href="reference/plot_ic_path.html">plot_ic_path</a></span><span class="op">(</span><span class="va">fit_glmnet</span>, criteria <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AIC"</span>, <span class="st">"BIC"</span>, <span class="st">"EBIC"</span><span class="op">)</span>,</span>
@@ -221,7 +236,7 @@
 <h3 id="stepwise-selection-with-ic_step">Stepwise selection with <code>ic_step()</code>
 <a class="anchor" aria-label="anchor" href="#stepwise-selection-with-ic_step"></a>
 </h3>
-<p><code><a href="reference/ic_step.html">ic_step()</a></code> generalises <code><a href="https://rdrr.io/pkg/MASS/man/stepAIC.html" class="external-link">MASS::stepAIC</a></code> to all five criteria:</p>
+<p><code><a href="reference/ic_step.html">ic_step()</a></code> generalises <code><a href="https://rdrr.io/pkg/MASS/man/stepAIC.html" class="external-link">MASS::stepAIC</a></code> to all eight criteria and supports parallel evaluation via the <code>cl</code> argument:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">mpg</span> <span class="op">~</span> <span class="fl">1</span>, data <span class="op">=</span> <span class="va">mtcars</span><span class="op">)</span></span>
 <span><span class="va">fit_full</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">mpg</span> <span class="op">~</span> <span class="va">.</span>, data <span class="op">=</span> <span class="va">mtcars</span><span class="op">)</span></span>
@@ -242,6 +257,21 @@
 <span><span class="co">#&gt; 1    0 &lt;start&gt; 211.6870</span></span>
 <span><span class="co">#&gt; 2    1    + wt 170.4266</span></span>
 <span><span class="co">#&gt; 3    2   + cyl 161.8730</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="expanding-the-search-space-with-expand_scope">Expanding the search space with <code>expand_scope()</code>
+<a class="anchor" aria-label="anchor" href="#expanding-the-search-space-with-expand_scope"></a>
+</h3>
+<p><code><a href="reference/expand_scope.html">expand_scope()</a></code> builds candidate formulas with interactions and polynomial terms for use with <code><a href="reference/ic_step.html">ic_step()</a></code>. It also returns a <code>P_index</code> list for use with <code><a href="reference/compute_rbic.html">compute_rbic()</a></code>:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">es</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/expand_scope.html">expand_scope</a></span><span class="op">(</span><span class="va">ies_total</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">ethnicity</span> <span class="op">+</span> <span class="va">sex</span>,</span>
+<span>                   data <span class="op">=</span> <span class="va">covid_eol</span>, k <span class="op">=</span> <span class="fl">2</span>, poly <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">es</span><span class="op">$</span><span class="va">formula</span></span>
+<span><span class="co">#&gt; ies_total ~ age + race + ethnicity + sex + I(age^2) + age:race + </span></span>
+<span><span class="co">#&gt;     age:ethnicity + age:sex + race:ethnicity + race:sex + ethnicity:sex</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x1258ddaf8&gt;</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">es</span><span class="op">$</span><span class="va">P_index</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "main"       "poly_2"     "interact_2"</span></span></code></pre></div>
 <p>This package was developed by Ryan Peterson. Code review, parallelization, and testing were assisted by Claude (Anthropic).</p>
 </div>
 </div>

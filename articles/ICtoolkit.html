@@ -85,9 +85,14 @@
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>ICtoolkit provides a unified interface for five information criteria
-across four model classes:</p>
+<p>ICtoolkit provides a unified interface for eight information criteria
+across six model classes:</p>
 <table class="table">
+<colgroup>
+<col width="32%">
+<col width="29%">
+<col width="38%">
+</colgroup>
 <thead><tr class="header">
 <th>Criterion</th>
 <th>Function</th>
@@ -102,7 +107,7 @@ across four model classes:</p>
 <tr class="even">
 <td>AICc</td>
 <td><code><a href="../reference/compute_aicc.html">compute_aicc()</a></code></td>
-<td>Small-sample correction</td>
+<td>Small-sample correction; Hurvich &amp; Tsai (1989)</td>
 </tr>
 <tr class="odd">
 <td>BIC</td>
@@ -110,11 +115,26 @@ across four model classes:</p>
 <td>Schwarz (1978)</td>
 </tr>
 <tr class="even">
+<td>HQIC</td>
+<td><code><a href="../reference/compute_hqic.html">compute_hqic()</a></code></td>
+<td>Hannan &amp; Quinn (1979)</td>
+</tr>
+<tr class="odd">
 <td>EBIC</td>
 <td><code><a href="../reference/compute_ebic.html">compute_ebic()</a></code></td>
 <td>Extended BIC; Chen &amp; Chen (2008)</td>
 </tr>
+<tr class="even">
+<td>mBIC</td>
+<td><code><a href="../reference/compute_mbic.html">compute_mbic()</a></code></td>
+<td>Modified BIC; Bogdan, Ghosh &amp; Doerge (2004)</td>
+</tr>
 <tr class="odd">
+<td>mBIC2</td>
+<td><code><a href="../reference/compute_mbic2.html">compute_mbic2()</a></code></td>
+<td>Modified BIC2; Frommlet &amp; Bogdan (2013)</td>
+</tr>
+<tr class="even">
 <td>RBIC</td>
 <td><code><a href="../reference/compute_rbic.html">compute_rbic()</a></code></td>
 <td>Grouped EBIC for structured predictors</td>
@@ -122,13 +142,14 @@ across four model classes:</p>
 </tbody>
 </table>
 <p>All functions support <code>lm</code>, <code>glm</code>,
-<code>glmnet</code>, and <code>ncvreg</code> objects. For
-<code>glmnet</code> and <code>ncvreg</code>, the criterion is evaluated
-at every point on the regularization path (one value per
+<code>coxph</code>, <code>glmnet</code>, <code>ncvreg</code>, and
+<code>ncvsurv</code> objects. For <code>glmnet</code>,
+<code>ncvreg</code>, and <code>ncvsurv</code>, the criterion is
+evaluated at every point on the regularization path (one value per
 <code>lambda</code>), which can itself be used as a selection algorithm
 without any stepwise fitting.</p>
 <p>Throughout this vignette we use the <code>covid_eol</code> dataset
-bundled with the package — a synthetic dataset modeled after a study of
+bundled with the package — a de-identified dataset from a study of
 family members of ICU patients surveyed for PTSD during the COVID-19
 pandemic (n = 298).</p>
 <hr>
@@ -294,7 +315,7 @@ character vector of <strong>term labels</strong> exactly as returned by
 <div class="section level2">
 <h2 id="ic-over-the-regularization-path-with-glmnet">4. IC over the regularization path with <code>glmnet</code><a class="anchor" aria-label="anchor" href="#ic-over-the-regularization-path-with-glmnet"></a>
 </h2>
-<p>For <code>glmnet</code> objects, all five criteria return a
+<p>For <code>glmnet</code> objects, all eight criteria return a
 <strong>vector</strong> of length <code>length(lambda)</code>. This
 makes IC-based selection straightforward: pick the <code>lambda</code>
 that minimises the criterion.</p>
@@ -308,7 +329,7 @@ that minimises the criterion.</p>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">covid_eol</span><span class="op">$</span><span class="va">ies_total</span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">fit_glmnet</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/glmnet/man/glmnet.html" class="external-link">glmnet</a></span><span class="op">(</span><span class="va">X</span>, <span class="va">y</span>, family <span class="op">=</span> <span class="st">"gaussian"</span><span class="op">)</span></span>
+<span><span class="va">fit_glmnet</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://glmnet.stanford.edu/reference/glmnet.html" class="external-link">glmnet</a></span><span class="op">(</span><span class="va">X</span>, <span class="va">y</span>, family <span class="op">=</span> <span class="st">"gaussian"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">bic_path</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_bic.html">compute_bic</a></span><span class="op">(</span><span class="va">fit_glmnet</span><span class="op">)</span></span>
 <span><span class="va">ebic_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_ebic.html">compute_ebic</a></span><span class="op">(</span><span class="va">fit_glmnet</span>, P <span class="op">=</span> <span class="va">p</span><span class="op">)</span></span>
@@ -365,7 +386,7 @@ given a base formula, it generates the expanded formula and a
 <span><span class="va">es</span><span class="op">$</span><span class="va">formula</span></span>
 <span><span class="co">#&gt; ies_total ~ age + race + ethnicity + sex + I(age^2) + age:race + </span></span>
 <span><span class="co">#&gt;     age:ethnicity + age:sex + race:ethnicity + race:sex + ethnicity:sex</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x557a25a15738&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x556f50be8578&gt;</span></span>
 <span><span class="va">es</span><span class="op">$</span><span class="va">P_index</span></span>
 <span><span class="co">#&gt; $main</span></span>
 <span><span class="co">#&gt; [1] "age"       "race"      "ethnicity" "sex"      </span></span>
@@ -381,10 +402,10 @@ given a base formula, it generates the expanded formula and a
 <div class="section level2">
 <h2 id="stepwise-selection-with-ic_step">6. Stepwise selection with <code>ic_step()</code><a class="anchor" aria-label="anchor" href="#stepwise-selection-with-ic_step"></a>
 </h2>
-<p><code><a href="../reference/ic_step.html">ic_step()</a></code> extends <code><a href="https://rdrr.io/pkg/MASS/man/stepAIC.html" class="external-link">MASS::stepAIC</a></code> to all five
-criteria for <code>lm</code>/<code>glm</code> objects. Combined with
-<code><a href="../reference/expand_scope.html">expand_scope()</a></code>, it makes RBIC-guided stepwise selection
-through interactions straightforward.</p>
+<p><code><a href="../reference/ic_step.html">ic_step()</a></code> extends <code><a href="https://rdrr.io/pkg/MASS/man/stepAIC.html" class="external-link">MASS::stepAIC</a></code> to all
+eight criteria for <code>lm</code>/<code>glm</code> objects. Combined
+with <code><a href="../reference/expand_scope.html">expand_scope()</a></code>, it makes RBIC-guided stepwise
+selection through interactions straightforward.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_null</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">ies_total</span> <span class="op">~</span> <span class="fl">1</span>, data <span class="op">=</span> <span class="va">covid_eol</span><span class="op">)</span></span>
 <span></span>
@@ -500,9 +521,19 @@ interactions.</p>
 <p>Akaike, H. (1974). A new look at the statistical model
 identification. <em>IEEE Transactions on Automatic Control</em>,
 <strong>19</strong>(6), 716–723.</p>
+<p>Bogdan, M., Ghosh, J. K., &amp; Doerge, R. W. (2004). Modifying the
+Schwarz Bayesian information criterion to locate multiple interacting
+quantitative trait loci. <em>Genetics</em>, <strong>167</strong>(2),
+989–999.</p>
 <p>Chen, J., &amp; Chen, Z. (2008). Extended Bayesian information
 criteria for model selection with large model spaces.
 <em>Biometrika</em>, <strong>95</strong>(3), 759–771.</p>
+<p>Frommlet, F., &amp; Bogdan, M. (2013). Some optimality properties of
+FDR controlling rules under sparsity. <em>Electronic Journal of
+Statistics</em>, <strong>7</strong>, 1328–1368.</p>
+<p>Hannan, E. J., &amp; Quinn, B. G. (1979). The determination of the
+order of an autoregression. <em>Journal of the Royal Statistical
+Society: Series B</em>, <strong>41</strong>(2), 190–195.</p>
 <p>Hurvich, C. M., &amp; Tsai, C.-L. (1989). Regression and time series
 model selection in small samples. <em>Biometrika</em>,
 <strong>76</strong>(2), 297–307.</p>
