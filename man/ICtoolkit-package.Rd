@@ -90,5 +90,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Ryan A Peterson \email{ryan-peterson@uiowa.edu} (\href{https://orcid.org/0000-0002-4650-5798}{ORCID})
 
+Authors:
+\itemize{
+  \item Ryan A Peterson \email{ryan-peterson@uiowa.edu} (\href{https://orcid.org/0000-0002-4650-5798}{ORCID})
+}
+
 }
 \keyword{internal}

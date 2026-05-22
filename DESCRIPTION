@@ -1,8 +1,8 @@
 Package: ICtoolkit
 Type: Package
 Title: Information Criteria for Penalized and Stepwise Model Selection
-Version: 0.1.0
-Date: 2026-03-27
+Version: 0.1.1
+Date: 2026-05-22
 Authors@R: person("Ryan A", "Peterson", , "ryan-peterson@uiowa.edu", 
     role = c("aut", "cre"),
       comment = c(ORCID = "0000-0002-4650-5798")
@@ -20,7 +20,6 @@ Description: Provides a unified interface for computing information criteria —
 License: GPL-3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Depends: R (>= 4.1.0)
 LazyData: true
 Imports:
@@ -40,3 +39,4 @@ VignetteBuilder: knitr
 Config/testthat/edition: 3
 URL: https://github.com/petersonR/ICtoolkit
 BugReports: https://github.com/petersonR/ICtoolkit/issues
+Config/roxygen2/version: 8.0.0

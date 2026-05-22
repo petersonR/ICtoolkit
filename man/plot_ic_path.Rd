@@ -14,6 +14,9 @@ plot_ic_path(
   xvar = c("-log(lambda)", "log(lambda)", "lambda"),
   mark_min = TRUE,
   legend = TRUE,
+  legend_pos = "topright",
+  xlim = NULL,
+  ylim = NULL,
   cols = NULL,
   lwd = 2,
   ...
@@ -47,12 +50,23 @@ IC-minimising lambda for each criterion.  Default \code{TRUE}.}
 \item{legend}{Logical.  Draw a legend when more than one criterion is
 plotted.  Default \code{TRUE}.}
 
+\item{legend_pos}{Legend placement.  Either a keyword accepted by
+\code{\link[graphics:legend]{graphics::legend()}} (e.g. \code{"topright"}, \code{"bottomleft"}, \code{"center"}) or a
+numeric vector \code{c(x, y)} giving coordinates in user units.  Default
+\code{"topright"}.}
+
+\item{xlim}{Numeric vector \code{c(min, max)} for the x-axis.  Default \code{NULL},
+which lets \code{\link[graphics:plot]{graphics::plot()}} choose limits from the data.}
+
+\item{ylim}{Numeric vector \code{c(min, max)} for the y-axis.  Default \code{NULL},
+which spans the range of all plotted IC values.}
+
 \item{cols}{Named or unnamed character/integer vector of colours, one per
 criterion.  Defaults to \code{seq_along(criteria)} (R's standard palette).}
 
 \item{lwd}{Line width.  Default \code{2}.}
 
-\item{...}{Additional graphical parameters passed to \code{\link[graphics:plot.default]{graphics::plot()}}.}
+\item{...}{Additional graphical parameters passed to \code{\link[graphics:plot]{graphics::plot()}}.}
 }
 \value{
 Invisibly returns a list with:

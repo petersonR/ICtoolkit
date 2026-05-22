@@ -1,4 +1,6 @@
-# ICtoolkit 0.1.0
+# ICtoolkit 0.1.1
+
+- Add `plot_ic_path` options
 
 ## Initial release
 
