@@ -32,7 +32,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">ICtoolkit</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.1</span>
       </span>
     </div>
 
@@ -219,7 +219,7 @@ pandemic (n = 298).</p>
 <h2 id="ebic-extended-bic">2. EBIC: Extended BIC<a class="anchor" aria-label="anchor" href="#ebic-extended-bic"></a>
 </h2>
 <p>EBIC adds a sparsity-encouraging penalty to BIC:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">EBIC</mtext><mo>=</mo><mtext mathvariant="normal">BIC</mtext><mo>+</mo><mn>2</mn><mspace width="0.167em"></mspace><mi>γ</mi><mspace width="0.167em"></mspace><mo>log</mo><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><mi>P</mi><mi>k</mi></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{EBIC} = \text{BIC} + 2\,\gamma\,\log\binom{P}{k}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">EBIC</mtext><mo>=</mo><mtext mathvariant="normal">BIC</mtext><mo>+</mo><mn>2</mn><mspace width="0.167em"></mspace><mi>γ</mi><mspace width="0.167em"></mspace><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><mi>P</mi><mi>k</mi></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{EBIC} = \text{BIC} + 2\,\gamma\,\log\binom{P}{k}</annotation></semantics></math></p>
 <p>where
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>P</mi><annotation encoding="application/x-tex">P</annotation></semantics></math>
 is the total number of candidate predictors and
@@ -227,7 +227,7 @@ is the total number of candidate predictors and
 is the number selected. The default
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>
 follows Chen &amp; Chen (2008):</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><mfrac><mrow><mo>log</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>P</mi><mi>/</mi><msqrt><mi>n</mi></msqrt><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><mo>log</mo><mi>P</mi></mrow></mfrac><mo>⋅</mo><mn>𝟏</mn><mrow><mo stretchy="true" form="prefix">(</mo><mi>P</mi><mo>≥</mo><msqrt><mi>n</mi></msqrt><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\gamma = \frac{\log(P/\sqrt{n})}{\log P} \cdot \mathbf{1}(P \geq \sqrt{n})</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><mfrac><mrow><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>P</mi><mi>/</mi><msqrt><mi>n</mi></msqrt><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>P</mi></mrow></mfrac><mo>⋅</mo><mn>𝟏</mn><mo stretchy="false" form="prefix">(</mo><mi>P</mi><mo>≥</mo><msqrt><mi>n</mi></msqrt><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\gamma = \frac{\log(P/\sqrt{n})}{\log P} \cdot \mathbf{1}(P \geq \sqrt{n})</annotation></semantics></math></p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># P = 10 candidate predictors (total, excluding intercept)</span></span>
 <span><span class="va">result_ebic</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_ebic.html">compute_ebic</a></span><span class="op">(</span><span class="va">fit</span>, P <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
@@ -278,7 +278,7 @@ follows Chen &amp; Chen (2008):</p>
 <p>RBIC generalises EBIC to predictors with a natural group structure
 (e.g., main effects vs. interactions, or predictors from different data
 modalities):</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">RBIC</mtext><mo>=</mo><mtext mathvariant="normal">BIC</mtext><mo>+</mo><mn>2</mn><munderover><mo>∑</mo><mrow><mi>g</mi><mo>=</mo><mn>1</mn></mrow><mi>G</mi></munderover><msub><mi>γ</mi><mi>g</mi></msub><mo>log</mo><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><msub><mi>P</mi><mi>g</mi></msub><msub><mi>k</mi><mi>g</mi></msub></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{RBIC} = \text{BIC} + 2 \sum_{g=1}^{G} \gamma_g \log\binom{P_g}{k_g}</annotation></semantics></math></p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">RBIC</mtext><mo>=</mo><mtext mathvariant="normal">BIC</mtext><mo>+</mo><mn>2</mn><munderover><mo>∑</mo><mrow><mi>g</mi><mo>=</mo><mn>1</mn></mrow><mi>G</mi></munderover><msub><mi>γ</mi><mi>g</mi></msub><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><msub><mi>P</mi><mi>g</mi></msub><msub><mi>k</mi><mi>g</mi></msub></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{RBIC} = \text{BIC} + 2 \sum_{g=1}^{G} \gamma_g \log\binom{P_g}{k_g}</annotation></semantics></math></p>
 <p>Groups are defined via a <code>P_index</code> list. For
 <code>lm</code>/<code>glm</code> objects, each element should be a
 character vector of <strong>term labels</strong> exactly as returned by
@@ -322,7 +322,7 @@ that minimises the criterion.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://glmnet.stanford.edu" class="external-link">glmnet</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading required package: Matrix</span></span>
-<span><span class="co">#&gt; Loaded glmnet 4.1-10</span></span>
+<span><span class="co">#&gt; Loaded glmnet 5.0</span></span>
 <span></span>
 <span><span class="co"># Create a model matrix from the covid_eol predictors</span></span>
 <span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">ethnicity</span> <span class="op">+</span> <span class="va">sex</span>, data <span class="op">=</span> <span class="va">covid_eol</span><span class="op">)</span><span class="op">[</span>, <span class="op">-</span><span class="fl">1</span><span class="op">]</span></span>
@@ -386,7 +386,7 @@ given a base formula, it generates the expanded formula and a
 <span><span class="va">es</span><span class="op">$</span><span class="va">formula</span></span>
 <span><span class="co">#&gt; ies_total ~ age + race + ethnicity + sex + I(age^2) + age:race + </span></span>
 <span><span class="co">#&gt;     age:ethnicity + age:sex + race:ethnicity + race:sex + ethnicity:sex</span></span>
-<span><span class="co">#&gt; &lt;environment: 0x556f50be8578&gt;</span></span>
+<span><span class="co">#&gt; &lt;environment: 0x55defe890cc0&gt;</span></span>
 <span><span class="va">es</span><span class="op">$</span><span class="va">P_index</span></span>
 <span><span class="co">#&gt; $main</span></span>
 <span><span class="co">#&gt; [1] "age"       "race"      "ethnicity" "sex"      </span></span>

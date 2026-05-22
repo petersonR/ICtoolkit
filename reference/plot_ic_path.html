@@ -20,7 +20,7 @@ minimises each criterion."><!-- mathjax --><script src="https://cdnjs.cloudflare
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">ICtoolkit</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.1.1</span>
       </span>
     </div>
 
@@ -72,6 +72,9 @@ minimises each criterion.</p>
 <span>  xvar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"-log(lambda)"</span>, <span class="st">"log(lambda)"</span>, <span class="st">"lambda"</span><span class="op">)</span>,</span>
 <span>  mark_min <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  legend <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  legend_pos <span class="op">=</span> <span class="st">"topright"</span>,</span>
+<span>  xlim <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ylim <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  cols <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lwd <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  <span class="va">...</span></span>
@@ -125,6 +128,23 @@ IC-minimising lambda for each criterion.  Default <code>TRUE</code>.</p></dd>
 <dt id="arg-legend">legend<a class="anchor" aria-label="anchor" href="#arg-legend"></a></dt>
 <dd><p>Logical.  Draw a legend when more than one criterion is
 plotted.  Default <code>TRUE</code>.</p></dd>
+
+
+<dt id="arg-legend-pos">legend_pos<a class="anchor" aria-label="anchor" href="#arg-legend-pos"></a></dt>
+<dd><p>Legend placement.  Either a keyword accepted by
+<code><a href="https://rdrr.io/r/graphics/legend.html" class="external-link">graphics::legend()</a></code> (e.g. <code>"topright"</code>, <code>"bottomleft"</code>, <code>"center"</code>) or a
+numeric vector <code>c(x, y)</code> giving coordinates in user units.  Default
+<code>"topright"</code>.</p></dd>
+
+
+<dt id="arg-xlim">xlim<a class="anchor" aria-label="anchor" href="#arg-xlim"></a></dt>
+<dd><p>Numeric vector <code>c(min, max)</code> for the x-axis.  Default <code>NULL</code>,
+which lets <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">graphics::plot()</a></code> choose limits from the data.</p></dd>
+
+
+<dt id="arg-ylim">ylim<a class="anchor" aria-label="anchor" href="#arg-ylim"></a></dt>
+<dd><p>Numeric vector <code>c(min, max)</code> for the y-axis.  Default <code>NULL</code>,
+which spans the range of all plotted IC values.</p></dd>
 
 
 <dt id="arg-cols">cols<a class="anchor" aria-label="anchor" href="#arg-cols"></a></dt>
