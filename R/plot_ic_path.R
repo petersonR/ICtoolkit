@@ -23,6 +23,14 @@
 #'   IC-minimising lambda for each criterion.  Default `TRUE`.
 #' @param legend Logical.  Draw a legend when more than one criterion is
 #'   plotted.  Default `TRUE`.
+#' @param legend_pos Legend placement.  Either a keyword accepted by
+#'   [graphics::legend()] (e.g. `"topright"`, `"bottomleft"`, `"center"`) or a
+#'   numeric vector `c(x, y)` giving coordinates in user units.  Default
+#'   `"topright"`.
+#' @param xlim Numeric vector `c(min, max)` for the x-axis.  Default `NULL`,
+#'   which lets [graphics::plot()] choose limits from the data.
+#' @param ylim Numeric vector `c(min, max)` for the y-axis.  Default `NULL`,
+#'   which spans the range of all plotted IC values.
 #' @param cols Named or unnamed character/integer vector of colours, one per
 #'   criterion.  Defaults to `seq_along(criteria)` (R's standard palette).
 #' @param lwd Line width.  Default `2`.
@@ -64,6 +72,9 @@ plot_ic_path <- function(fit,
                           xvar      = c("-log(lambda)", "log(lambda)", "lambda"),
                           mark_min  = TRUE,
                           legend    = TRUE,
+                          legend_pos = "topright",
+                          xlim      = NULL,
+                          ylim      = NULL,
                           cols      = NULL,
                           lwd       = 2,
                           ...) {
@@ -120,11 +131,14 @@ plot_ic_path <- function(fit,
   names(opt_lambda) <- criteria
 
   # ---- plot -----------------------------------------------------------------
-  ylim <- range(unlist(ic_vals), na.rm = TRUE)
+  if (is.null(ylim))
+    ylim <- range(unlist(ic_vals), na.rm = TRUE)
+  if (is.null(xlim))
+    xlim <- range(x, na.rm = TRUE)
 
   graphics::plot(x, ic_vals[[1]],
     type = "l", col = cols[1], lwd = lwd,
-    xlab = xvar, ylab = "IC value", ylim = ylim, ...
+    xlab = xvar, ylab = "IC value", xlim = xlim, ylim = ylim, ...
   )
 
   if (length(criteria) > 1) {
@@ -137,9 +151,15 @@ plot_ic_path <- function(fit,
       graphics::abline(v = opt_x[i], col = cols[i], lty = 2, lwd = 1)
   }
 
-  if (legend && length(criteria) > 1)
-    graphics::legend("topright", legend = criteria,
-                     col = cols, lty = 1, lwd = lwd, bty = "n")
+  if (legend && length(criteria) > 1) {
+    if (is.numeric(legend_pos) && length(legend_pos) == 2L) {
+      graphics::legend(x = legend_pos[1], y = legend_pos[2], legend = criteria,
+                       col = cols, lty = 1, lwd = lwd, bty = "n")
+    } else {
+      graphics::legend(legend_pos, legend = criteria,
+                       col = cols, lty = 1, lwd = lwd, bty = "n")
+    }
+  }
 
   invisible(list(ic = ic_vals, opt_lambda = opt_lambda, lambda = lambda))
 }

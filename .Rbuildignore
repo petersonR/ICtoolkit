@@ -8,3 +8,5 @@
 ^\.Rproj\.user$
 ^CLAUDE.md
 ^.claude$
+^\.positai$
+^\.claude$
